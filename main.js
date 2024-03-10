@@ -44,13 +44,15 @@ io.on("connection", (socket) => {
 
     // Ascolta i messaggi di chat e li trasmette a tutti nella stessa room
     socket.on("chat message", (room, {username, message, timestamp}) => {
-        io.to(room).emit("chat message", {username, message, timestamp}); // Trasmetti l'username e il messaggio
+        let dateObject = new Date(timestamp);
+        let date = dateObject.toLocaleDateString();
+        let time = dateObject.toLocaleTimeString();
+        io.to(room).emit("chat message", {IdAutore: username, Testo: message, Data_invio: date, Ora_invio: time}); // Trasmetti l'username e il messaggio
         // Aggiungi il messaggio all'array temporaneo
         if (!temporaryMessages[room]) {
             temporaryMessages[room] = [];
         }
         temporaryMessages[room].push({username, message, timestamp});
-
         console.log(chats);
     });
 
@@ -67,7 +69,8 @@ app.get("/chat/:id/messages", (req, res) => {
     const chatId = req.params.id;
     const sql = `SELECT *
                  FROM messaggio
-                 WHERE IdChat = ?`;
+                 WHERE IdChat = ?
+                 ORDER BY Data_invio, Ora_invio `;
     db.query(sql, [chatId], (err, result) => {
         if (err) res.json({message: "Errore"});
         res.json(result);
@@ -77,11 +80,18 @@ app.get("/chat/:id/messages", (req, res) => {
 const saveMessagesToDatabase = (room) => {
     let messages = temporaryMessages[room];
     if (messages && messages.length > 0) {
+        let messageId = 0;
         // Connect to the database and save the messages
         messages.forEach(({username, message, timestamp}) => {
+            messageId = uuidv4();
+            let dateObject = new Date(timestamp);
+            let date = `${dateObject.getFullYear()}-${('0' + (dateObject.getMonth() + 1)).slice(-2)}-${('0' + dateObject.getDate()).slice(-2)}`;
+            let time = dateObject.toLocaleTimeString();
+            console.log(timestamp);
+            console.log(date);
             const sqlMessage = `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
-                                VALUES (UUID(), ?, NOW(), NOW(), ?, ?)`;
-            db.query(sqlMessage, [message, username, room], (err, result) => {
+                                VALUES (?, ?, ?, ?, ?, ?)`;
+            db.query(sqlMessage, [messageId, message, date, time, username, room], (err, result) => {
                 if (err) throw err;
             });
         });
@@ -105,15 +115,13 @@ app.get("/user/:username/chats", (req, res) => {
 
 app.get("/user/:username/friends", (req, res) => {
     const username = req.params.username;
-    const sql = `SELECT *
-                 FROM account
-                          JOIN amicizia ON account.Username = amicizia.IdAccount1
-                 WHERE amicizia.IdAccount1 = ?
+    const sql = `SELECT IdAccount1 as friend
+                 FROM amicizia
+                 WHERE IdAccount2 = ?
                  UNION
-                 SELECT *
-                 FROM account
-                          JOIN amicizia ON account.Username = amicizia.IdAccount2
-                 WHERE amicizia.IdAccount2 = ?`;
+                 SELECT IdAccount2 as friend
+                 FROM amicizia
+                 WHERE IdAccount1 = ?`;
     db.query(sql, [username, username], (err, result) => {
         if (err) throw err;
         res.json(result);
@@ -124,14 +132,10 @@ app.post("/user", (req, res) => {
     const {Username, Mail, Password, ImmagineProfilo, Token} = req.body;
     const sql = `INSERT INTO account (Username, Mail, Password, ImmagineProfilo, Token)
                  VALUES (?, ?, ?, ?, ?)`;
-    db.query(
-        sql,
-        [Username, Mail, Password, ImmagineProfilo, Token],
-        (err, result) => {
-            if (err) throw err;
-            res.json({message: "Utente creato con successo"});
-        }
-    );
+    db.query(sql, [Username, Mail, Password, ImmagineProfilo, Token], (err, result) => {
+        if (err) throw err;
+        res.json({message: "Utente creato con successo"});
+    });
 });
 
 
@@ -158,6 +162,7 @@ app.post("/chat", (req, res) => {
 app.post("/chat/:id/users", (req, res) => {
     const chatId = req.params.id;
     const {users} = req.body;
+    console.log("ID: " + chatId);
     users.forEach((user) => {
         const sqlPartecipazione = `INSERT INTO partecipazione (IdChat, IdAccount)
                                    VALUES (?, ?)`;
@@ -173,24 +178,48 @@ app.post("/message", (req, res) => {
     const sql = `INSERT INTO messaggio (Id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
                  VALUES (?, ?, ?, ?, ?, ?, ?)`;
     const id = uuidv4();
-    db.query(
-        sql,
-        [Id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat],
-        (err, result) => {
-            if (err) throw err;
-            res.json({message: "Messaggio creato con successo"});
-        }
-    );
+    db.query(sql, [id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat], (err, result) => {
+        if (err) throw err;
+        res.json({message: "Messaggio creato con successo"});
+    });
 });
 
 // Aggiungere un'amicizia
 app.post("/friendship", (req, res) => {
     const {username1, username2} = req.body;
-    const sql = `INSERT INTO amicizia (IdAccount1, IdAccount2)
-                 VALUES (?, ?)`;
-    db.query(sql, [username1, username2], (err, result) => {
+    // Check if both users exist
+    if (username1 === username2) {
+        return res.status(400).json({message: "The usernames cannot be the same"});
+    }
+    const checkUsersSql = `SELECT *
+                           FROM account
+                           WHERE Username IN (?, ?)`;
+    db.query(checkUsersSql, [username1, username2], (err, result) => {
         if (err) throw err;
-        res.json({message: "Amicizia aggiunta con successo"});
+
+        if (result.length < 2) {
+            return res.status(400).json({message: "One or both users do not exist"});
+        }
+        // Check if friendship already exists
+        const checkFriendshipSql = `SELECT *
+                                    FROM amicizia
+                                    WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                       OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+        db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+            if (err) throw err;
+
+            if (result.length > 0) {
+                console.log("Entrato");
+                return res.status(400).json({message: "Friendship already exists"});
+            }
+            // Insert friendship
+            const sql = `INSERT INTO amicizia (IdAccount1, IdAccount2)
+                         VALUES (?, ?)`;
+            db.query(sql, [username1, username2], (err, result) => {
+                if (err) throw err;
+                res.json({message: "Amicizia aggiunta con successo"});
+            });
+        });
     });
 });
 

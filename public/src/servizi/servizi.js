@@ -6,6 +6,7 @@ export async function getChatMessages(chatId) {
     const response = await fetch(`/chat/${chatId}/messages`);
     const data = await response.json();
     console.log(`Messaggi della chat ${chatId}:`);
+    console.log(data);
     return data;
 }
 
@@ -26,23 +27,7 @@ export async function getUserChats(username) {
  */
 export async function getUserFriends(username) {
     const response = await fetch(`/user/${username}/friends`);
-    const data = await response.json();
-    console.log(`Amici dell'account ${username}:`);
-    console.log(data);
-}
-
-/**
- * Funzione per creare un utente.
- * @param {Object} user - L'oggetto utente.
- */
-export async function createUser(user) {
-    const response = await fetch("/user", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(user),
-    });
-    const data = await response.json();
-    console.log(data.message);
+    return await response.json();
 }
 
 /**
@@ -63,19 +48,6 @@ export async function createChat(nomeChat, users) {
     console.log(data.message);
 }
 
-/**
- * Funzione per creare un messaggio.
- * @param {Object} message - L'oggetto messaggio.
- */
-export async function createMessage(message) {
-    const response = await fetch("/message", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(message),
-    });
-    const data = await response.json();
-    console.log(data.message);
-}
 
 /**
  * Funzione per aggiungere un'amicizia.
@@ -90,6 +62,7 @@ export async function addFriendship(username1, username2) {
     });
     const data = await response.json();
     console.log(data.message);
+    return data;
 }
 
 /**
@@ -136,30 +109,20 @@ export async function login(username, password) {
     );
 }
 
-// Dati di esempio per creare un utente, una chat e un messaggio
-const user = {
-    Username: "test",
-    Mail: "test@mail.com",
-    Password: "test",
-    ImmagineProfilo: "default_path",
-    Token: "test",
-};
+/**
+ * Funzione per aggiungere utenti a una chat.
+ * @param {string} chatId - L'ID della chat.
+ * @param {Array} users - L'array degli ID degli utenti.
+ */
+export async function addUsersToChat(chatId, users) {
+    console.log(chatId);
+    const response = await fetch(`/chat/${chatId}/users`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({users}),
+    });
+    const data = await response.json();
+    console.log(data.message);
+}
 
-const chat = {Id: "2", DataCreazione: "2022-01-01", users: ["test"]};
-const message = {
-    Id: "1",
-    Path: "",
-    Testo: "Ciao",
-    Data_invio: "2022-01-01",
-    Ora_invio: "12:00:00",
-    IdAutore: "test",
-    IdChat: "2",
-};
 
-//createUser(user);
-//createChat(chat);
-//createMessage(message);
-// Richiama i servizi
-//getChatMessages(2);
-//getUserChats('test');
-//getUserFriends('test');

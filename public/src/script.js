@@ -1,5 +1,5 @@
 import {
-    getChatMessages, getUserChats, getUserFriends, createChat, addFriendship, editMessage, deleteMessage,
+    getChatMessages, getUserChats, getUserFriends, createChat, addFriendship, addUsersToChat,
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -13,34 +13,73 @@ const buttonChat = document.getElementById("chats");
 const listChat = document.getElementById("listChat");
 const newChat = document.getElementById("newChat");
 const nomeChat = document.getElementById("nomeChat");
-//const users = document.getElementById("users");
+const newFriend = document.getElementById("newFriend");
+const usernameFriend = document.getElementById("usernameFriend");
+const boxAmicizia = document.getElementById("checkBoxAmicizia");
+const inviaAmicizia = document.getElementById("inviaAmici");
+let chatSelezionata = "";
+newFriend.onclick = () => {
+    console.log(username, usernameFriend.value);
+    addFriendship(username, usernameFriend.value).then((data) => {
+        console.log(data);
+    });
+}
 newChat.onclick = () => {
     createChat(nomeChat.value, [username]).then((data) => {
         console.log(data);
     });
-
 }
 buttonChat.onclick = () => {
     getUserChats(username).then((data) => {
-        console.log(data);
         listChat.innerHTML = data
             .map((chat) => {
-                return `<li>${chat.NomeChat} <button type="button" class="btn btn-primary" id="chat_${chat.IdChat}">Connetti</button></li>`;
+                return `<li>${chat.NomeChat} <button type="button" class="btn btn-primary" id="chat_${chat.IdChat}">Connetti</button><button class="btn btn-warning" type="button" data-bs-toggle="modal"
+                           id="invita_${chat.IdChat}" data-bs-target="#modalChatAmicizia">
+                        Amicizia
+                    </button></li>`;
             })
             .join("");
         let buttonTmp = "";
+        let buttonTmpInvito = "";
         for (let i = 0; i < data.length; i++) {
+            room = data[i].IdChat;
+            console.log(room);
             buttonTmp = document.getElementById(`chat_${data[i].IdChat}`);
+            buttonTmpInvito = document.getElementById(`invita_${data[i].IdChat}`);
+            console.log(buttonTmpInvito.id);
             buttonTmp.onclick = () => {
-                room = data[i].IdChat;
                 socket.emit('join room', room);
                 getChatMessages(room).then((data) => {
-                    console.log(data);
+                    messageData = data;
+                    displayMessages(messageData);
                 });
             };
+            buttonTmpInvito.onclick = () => {
+                getUserFriends(username).then((data) => {
+                    console.log("Room: " + room);
+                    renderInvito(data);
+                    inviaAmicizia.onclick = () => {
+                        const arrayAggiunta = [];
+                        const checkboxes = document.querySelectorAll("#checkBoxAmicizia .form-check-input");
+                        checkboxes.forEach((checkbox, index) => {
+                            if (checkbox.checked) {
+                                arrayAggiunta.push(checkbox.value);
+                            }
+                        });
+                        addUsersToChat(room, arrayAggiunta).then((data) => {
+                            console.log(data);
+                        });
+                    }
+                });
+            }
         }
     });
 }
+socket.on("chat message", (message) => {
+    console.log(message)
+    messageData.push(message); // Aggiungi il messaggio all'array
+    displayMessages(messageData); // Visualizza i messaggi
+});
 let username = "";
 let password = "";
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
@@ -50,6 +89,7 @@ if (sessionStorage.getItem("username") === null || sessionStorage.getItem("passw
     password = sessionStorage.getItem("password");
     getUserChats(username).then((data) => {
         console.log(data);
+        //displayMessages(data);
     });
 }
 
@@ -69,16 +109,13 @@ form.addEventListener("submit", (e) => {
 
 let messageData = []; // Array per salvare i dati dei messaggi
 
-socket.on("chat message", (message) => {
-    messageData.push(message); // Aggiungi il messaggio all'array
-    displayMessages(); // Visualizza i messaggi
-});
 
-function displayMessages() {
-    messages.innerHTML = messageData
-        .map(({username1, message, timestamp}) => {
-            const align = username1 === username ? "me" : "others";
-            return `<li class="${align}">[${timestamp}] ${username1}: ${message}</li>`;
+function displayMessages(array) {
+    messages.innerHTML = array
+        .map(({IdAutore, Testo, Data_invio, Ora_invio}) => {
+            console.log(IdAutore, username);
+            const align = IdAutore === username ? "me" : "others";
+            return `<li class="${align}">[${Ora_invio}] ${IdAutore}: ${Testo}</li>`;
         })
         .join("");
 
@@ -93,3 +130,17 @@ function displayMessages() {
   room = "";
   messages.innerHTML = "";
 */
+const renderInvito = (array) => {
+    console.log(array);
+    boxAmicizia.innerHTML = array
+        .map((user) => {
+            return `<div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${user.friend}" id="flexCheckDefault"/>
+        <label class="form-check-label" for="flexCheckDefault">
+            ${user.friend}
+        </label>
+    </div>`;
+        })
+        .join("");
+
+}

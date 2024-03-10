@@ -73,6 +73,12 @@
                         new chat
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                            data-bs-target="#modalAmicizia">
+                        Amicizia
+                    </button>
+                </li>
             </ul>
         </div>
     </div>
@@ -112,6 +118,59 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalAmicizia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="">Amicizie</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form onsubmit="return false">
+                <div class="modal-body">
+                    <div class="form-floating mb-3">
+                        <div class="row mt-1">
+                            <div class="col">
+                                <div class="form-label-group outline">
+                                    <input
+                                            type="text"
+                                            id="usernameFriend"
+                                            class="form-control shadow-none border-light"
+                                            placeholder=""
+                                            required
+                                    />
+                                    <span
+                                    ><label for="usernameFriend" class="text-white"
+                                    >Username amico</label></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="newFriend">Crea chat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalChatAmicizia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="nomeChatAmico">Invita alla chat</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="checkBoxAmicizia">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="inviaAmici">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="offcanvas offcanvas-start" tabindex="-1" id="chatOffCanvas">
     <div class="offcanvas-header">
         <h2 class="offcanvas-title" id="offcanvasExampleLabel">Chats</h2>
