@@ -56,6 +56,11 @@ io.on("connection", (socket) => {
         console.log(chats);
     });
 
+    socket.on("leaveRoom", (room, username) => {
+        socket.leave(room);
+        console.log(`User ${username} left room: ${room}`);
+        saveMessagesToDatabase(room);
+    });
     socket.on("disconnect", (data) => {
         console.log("user disconnected");
     });

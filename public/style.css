@@ -1,5 +1,36 @@
 body {
     font-family: "Lexend";
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1em;
+    font-weight: 300;
+    line-height: 1.7em;
+    color: #999;
+}
+
+a,
+a:hover,
+a:focus {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.navbar-btn {
+    box-shadow: none;
+    outline: none !important;
+    border: none;
+}
+
+.line {
+    width: 100%;
+    height: 0.0625rem;
+    border-bottom: 0.0625rem dashed #ddd;
+    margin: 2.5rem 0;
 }
 
 h1 {
@@ -23,64 +54,7 @@ img {
 
 .custom-scrollbar {
     position: relative;
-    height: 200px;
-    overflow: auto;
-}
-
-.table-scroll-y {
-    display: block;
-}
-
-#form {
-    background: rgba(0, 0, 0, 0.15);
-    padding: 0.25rem;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    height: 3rem;
-    box-sizing: border-box;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-#messages li.others {
-    text-align: right;
-}
-
-#messages li.me {
-    text-align: left;
-}
-
-body {
-    font-family: "Lexend";
-    color-scheme: light dark;
-}
-
-h1 {
-    font-family: 'Lexend Deca', sans-serif;
-    font-size: 4.7em;
-}
-
-h2 {
-    font-family: 'Lexend', sans-serif;
-    font-weight: bold;
-}
-
-h3 {
-    font-family: 'Lexend', sans-serif;
-    font-size: 1.3em;
-    font-weight: bold;
-}
-
-img {
-    max-width: 80%;
-}
-
-.custom-scrollbar {
-    position: relative;
-    height: 200px;
+    height: 12.5rem;
     overflow: auto;
 }
 
@@ -110,14 +84,14 @@ footer {
 
 .card-custom {
     background-color: rgba(255, 255, 255, 0.13);
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+    border-radius: 0.625rem;
+    backdrop-filter: blur(0.625rem);
+    border: 0.125rem solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 2.5rem rgba(8, 7, 16, 0.6);
 }
 
 .img-card {
-    border-radius: 25px;
+    border-radius: 1.5625rem;
     border: 1rem solid rgba(33, 37, 41, 0);
 }
 
@@ -126,36 +100,35 @@ select {
     color: #fff;
 }
 
-
 .form-label-group.outline select option {
     background-color: #212529; /* $gray-100 in Bootstrap */
     color: #e8f7ff; /* $gray-900 in Bootstrap */
 }
 
 .input-space {
-    margin-right: 10px !important;
+    margin-right: 0.625rem !important;
 }
 
 .ol-popup {
     font-family: 'MADE Tommy Soft', sans-serif !important;
-    font-size: 12px;
+    font-size: 0.75rem;
     position: absolute;
     background-color: white;
-    -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
-    padding: 15px;
-    border-radius: 10px;
-    border: 1px solid #cccccc;
-    bottom: 12px;
-    left: -50px;
-    min-width: 100px;
+    -webkit-filter: drop-shadow(0 0.0625rem 0.25rem rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 0.0625rem 0.25rem rgba(0, 0, 0, 0.2));
+    padding: 0.9375rem;
+    border-radius: 0.625rem;
+    border: 0.0625rem solid #cccccc;
+    bottom: 0.75rem;
+    left: -3.125rem;
+    min-width: 6.25rem;
 }
 
 .ol-popup-closer {
     text-decoration: none;
     position: absolute;
-    top: 2px;
-    right: 8px;
+    top: 0.125rem;
+    right: 0.5rem;
 }
 
 .ol-popup-closer:after {
@@ -176,20 +149,20 @@ select {
 
 .ol-popup:after {
     border-top-color: white;
-    border-width: 10px;
-    left: 48px;
-    margin-left: -10px;
+    border-width: 0.625rem;
+    left: 3rem;
+    margin-left: -0.625rem;
 }
 
 .ol-popup:before {
     border-top-color: #cccccc;
-    border-width: 11px;
-    left: 48px;
-    margin-left: -11px;
+    border-width: 0.6875rem;
+    left: 3rem;
+    margin-left: -0.6875rem;
 }
 
 .custom-carousel-icon {
-    font-size: 24px; /* Imposta la dimensione dell'icona */
+    font-size: 1.5rem; /* Imposta la dimensione dell'icona */
     color: #ffffff; /* Imposta il colore bianco per l'icona */
 }
 
@@ -214,4 +187,148 @@ select {
 .carousel-item video {
     width: 100%; /* Imposta la larghezza al 100% del contenitore */
     height: auto; /* Mantieni le proporzioni */
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+#sidebar {
+    position: fixed;
+    min-width: 15.625rem;
+    max-width: 15.625rem;
+    background: #101415;
+    color: #fff;
+    transition: all 0.3s;
+    height: 100vh;
+    overflow-y: auto;
+    top: 0; /* Aggiungi questa linea */
+}
+
+#sidebar.active {
+    margin-left: -15.625rem;
+}
+
+#content {
+    margin-left: 15.625rem; /* Aggiungi questa linea */
+}
+
+#sidebar ul.components {
+    padding: 1.25rem 0;
+    border-bottom: 0.0625rem solid #47748b;
+}
+
+.container-fluid {
+    margin-left: 15.625rem; /* This should be the width of your sidebar */
+}
+
+#sidebar ul p {
+    color: #fff;
+    padding: 0.625rem;
+}
+
+#sidebar ul li a {
+    padding: 0.625rem;
+    font-size: 1.1em;
+    display: block;
+}
+
+#sidebar ul li a:hover {
+    color: #D9D9D9;
+    background: #8044C5;
+}
+
+#sidebar ul li.active > a,
+a[aria-expanded="true"] {
+    color: #fff;
+    background: #8044C5;
+}
+
+a[data-toggle="collapse"] {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 1.25rem;
+    transform: translateY(-50%);
+}
+
+ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 1.875rem !important;
+    background: #6d7fcc;
+}
+
+ul.CTAs {
+    padding: 1.25rem;
+}
+
+ul.CTAs a {
+    text-align: center;
+    font-size: 0.9em !important;
+    display: block;
+    border-radius: 0.3125rem;
+    margin-bottom: 0.3125rem;
+}
+
+a.download {
+    background: #fff;
+    color: #7386D5;
+}
+
+a.article,
+a.article:hover {
+    background: #6d7fcc !important;
+    color: #fff !important;
+}
+
+/* ---------------------------------------------------
+    CONTENT STYLE
+----------------------------------------------------- */
+
+#content {
+    width: 100%;
+    padding: 1.25rem;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* ---------------------------------------------------
+    MEDIAQUERIES
+----------------------------------------------------- */
+
+@media (max-width: 48rem) {
+    #sidebar {
+        margin-left: -15.625rem;
+    }
+
+    #sidebar.active {
+        margin-left: 0;
+    }
+
+    #sidebarCollapse span {
+        display: none;
+    }
+}
+
+.disabled a {
+    pointer-events: none;
+    color: grey;
+}
+
+#form {
+    position: fixed;
+    bottom: 0;
+    left: 15.625rem; /* This should be the width of your sidebar */
+    width: calc(100% - 15.625rem); /* This will take up the rest of the width */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+    z-index: 1000; /* This ensures the form stays on top of other elements */
 }

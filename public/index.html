@@ -37,7 +37,6 @@
 </head>
 
 <body>
-
 <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">Git chat</a>
@@ -177,7 +176,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <ul class="list-group list-group-flush" id="listChat">
+        <ul class="list-group list-group-flush" >
             <li class="list-group-item">Chat 1</li>
             <li class="list-group-item">Chat 2</li>
             <li class="list-group-item">Chat 3</li>
@@ -185,10 +184,26 @@
         </ul>
     </div>
 </div>
-<div class="container">
-    <div class="card card-body rounded-3">
-        <ul id="messages"></ul>
+<div class="wrapper">
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <form class="d-flex" role="search">
+                <input class="form-control me-2 rounded-5" type="search" placeholder="Search" aria-label="Search">
+            </form>
+        </div>
+
+        <ul class="list-unstyled components" id="listChat">
+
+        </ul>
+    </nav>
+    <div class="container-fluid">
+        <div class="card card-body rounded-3">
+            <ul id="messages"></ul>
+        </div>
     </div>
+</div>
+</body>
+<footer class="bd-footer sticky-bottom">
     <form id="form" action="">
         <input
                 id="input"
@@ -201,7 +216,6 @@
             Send
         </button>
     </form>
-</div>
-</body>
+</footer>
 <script type="module" src="./src/script.js"></script>
 </html>
