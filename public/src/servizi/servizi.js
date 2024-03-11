@@ -18,6 +18,7 @@ export async function getUserChats(username) {
     const response = await fetch(`/user/${username}/chats`);
     const data = await response.json();
     console.log(`Chat dell'utente ${username}:`);
+    console.log(data);
     return data;
 }
 

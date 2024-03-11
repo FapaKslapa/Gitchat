@@ -15,6 +15,7 @@ const io = new Server(server);
 let chats = [];
 let temporaryMessages = {};
 const uuidv4 = require('uuid').v4;
+const fs = require('fs');
 
 // Configura Express per utilizzare body-parser come middleware.
 app.use(bodyParser.json()); // supporta i corpi delle richieste json
@@ -106,6 +107,7 @@ const saveMessagesToDatabase = (room) => {
     }
 }
 
+
 app.get("/user/:username/chats", (req, res) => {
     const username = req.params.username;
     const sql = `SELECT *
@@ -114,10 +116,35 @@ app.get("/user/:username/chats", (req, res) => {
                  WHERE partecipazione.IdAccount = ?`;
     db.query(sql, [username], (err, result) => {
         if (err) res.json({message: "Errore"});
-        res.json(result);
+
+        let chats = result;
+        let completedQueries = 0;
+
+        chats.forEach((chat, index) => {
+            const sqlUsers = `SELECT account.Username, account.ImmagineProfilo
+                              FROM account
+                                       JOIN partecipazione ON account.Username = partecipazione.IdAccount
+                              WHERE partecipazione.IdChat = ?`;
+            db.query(sqlUsers, [chat.Id], (err, result) => {
+                if (err) throw err;
+                chats[index].users = result.map(user => {
+                    // Leggi il file dell'immagine e convertilo in base64
+                    let imagePath = `./images/${user.ImmagineProfilo}`;
+                    let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
+
+                    return {
+                        username: user.Username,
+                        profileImage: imageAsBase64
+                    };
+                });
+                completedQueries++;
+                if (completedQueries === chats.length) {
+                    res.json(chats);
+                }
+            });
+        });
     });
 });
-
 app.get("/user/:username/friends", (req, res) => {
     const username = req.params.username;
     const sql = `SELECT IdAccount1 as friend

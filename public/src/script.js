@@ -18,8 +18,44 @@ const usernameFriend = document.getElementById("usernameFriend");
 const boxAmicizia = document.getElementById("checkBoxAmicizia");
 const inviaAmicizia = document.getElementById("inviaAmici");
 let chatSelezionata = "";
+let chats = [];
 let username = "";
 let password = "";
+const templateMessageMio = `
+<li class="d-flex justify-content-start mb-4">
+    <img src="%SRC" alt="avatar"
+         class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60">
+    <div class="card mask-custom w-50">
+        <div class="card-header d-flex justify-content-between p-3"
+             style="border-bottom: 1px solid rgba(255,255,255,.3);">
+            <p class="fw-bold mb-0">%USERNAME</p>
+            <p class="text-light small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">
+                %TESTO
+            </p>
+        </div>
+    </div>
+</li>`;
+
+const templateMessageAltro = `
+<li class="d-flex justify-content-end mb-4">
+    <div class="card mask-custom w-50">
+        <div class="card-header d-flex justify-content-between p-3"
+             style="border-bottom: 1px solid rgba(255,255,255,.3);">
+            <p class="fw-bold mb-0">%USERNAME</p>
+            <p class="text-light small mb-0"><i class="far fa-clock"></i> %TEMPO</p>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">
+                %TESTO
+            </p>
+        </div>
+    </div>
+    <img src="%SRC" alt="avatar"
+         class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
+</li>`;
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "/accedi.html";
 } else {
@@ -43,12 +79,16 @@ newChat.onclick = () => {
     });
 }
 getUserChats(username).then((data) => {
+    chats = data;
     listChat.innerHTML = data
         .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
             return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}<button class="btn btn-warning" type="button" data-bs-toggle="modal"
                            id="invita_${chat.IdChat}" data-bs-target="#modalChatAmicizia">
                         Amicizia
-                    </button></a></li>`;
+                    </button>
+                    <p>${usernames}</p></a>
+                    </li>`;
         })
         .join("");
     renderChat(data);
@@ -78,25 +118,49 @@ form.addEventListener("submit", (e) => {
 
 let messageData = []; // Array per salvare i dati dei messaggi
 
+function stringToColour(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let colour = '#';
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xFF;
+        colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
+}
 
 function displayMessages(array) {
+    const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
     messages.innerHTML = array
         .map(({IdAutore, Testo, Data_invio, Ora_invio}) => {
+            const user = chat ? chat.users.find(user => user.username === IdAutore) : null;
+            const profileImage = user ? `data:image/jpeg;base64,${user.profileImage}` : "https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg";
             const align = IdAutore === username ? "me" : "others";
-            return `<li class="${align}">[${Ora_invio}] ${IdAutore}: ${Testo}</li>`;
+            const userColor = stringToColour(IdAutore);
+            const formattedTime = new Date(`${Data_invio} ${Ora_invio}`).toLocaleString("it-IT", {
+                year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+            });
+            if (align === "me") {
+                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", formattedTime)
+            } else {
+                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", formattedTime)
+            }
         })
         .join("");
-
-    // Scorri fino all'ultimo messaggio
-    window.scrollTo(0, document.body.scrollHeight);
+    const lastMessage = messages.lastElementChild;
+    if (lastMessage) {
+        lastMessage.scrollIntoView();
+    }
 }
 
 /*
-  socket.emit("leaveRoom", room, username);
-  messageData = [];
-  roomInput.value = "";
-  room = "";
-  messages.innerHTML = "";
+socket.emit("leaveRoom", room, username);
+messageData = [];
+roomInput.value = "";
+room = "";
+messages.innerHTML = "";
 */
 const renderInvito = (array) => {
     console.log(array);
@@ -118,6 +182,7 @@ const handleClick = (i, array) => {
     console.log("Click");
     room = array[i].IdChat;
     socket.emit('join room', array[i].IdChat);
+    chatSelezionata = array[i].NomeChat;
     for (let j = 0; j < array.length; j++) {
         if (array[j].IdChat !== array[i].IdChat) {
             document.getElementById(`chat_${array[j].IdChat}`).classList.remove("active");

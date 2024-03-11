@@ -4,7 +4,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Accedi - admin</title>
-    <link rel="icon" href="../immagini/Logo.ico" type="image/x-icon"/>
+    <link rel="icon" href="../Immagini/Logo.ico" type="image/x-icon"/>
 
     <link
             href="https://fonts.googleapis.com/css?family=Lexend"
@@ -176,7 +176,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <ul class="list-group list-group-flush" >
+        <ul class="list-group list-group-flush">
             <li class="list-group-item">Chat 1</li>
             <li class="list-group-item">Chat 2</li>
             <li class="list-group-item">Chat 3</li>
@@ -186,25 +186,33 @@
 </div>
 <div class="wrapper">
     <nav id="sidebar">
-        <div class="sidebar-header">
-            <form class="d-flex" role="search">
-                <input class="form-control me-2 rounded-5" type="search" placeholder="Search" aria-label="Search">
-            </form>
+        <div class="row mt-4">
+            <div class="sidebar-header">
+                <form class="d-flex" role="search">
+                    <input class="form-control me-2 rounded-5" type="search" placeholder="Search" aria-label="Search">
+                </form>
+            </div>
         </div>
-
         <ul class="list-unstyled components" id="listChat">
 
         </ul>
     </nav>
     <div class="container-fluid">
-        <div class="card card-body rounded-3">
-            <ul id="messages"></ul>
+        <div class="row">
+            <div class="col-12">
+                <div class="card-full-page">
+                    <ul class="list-unstyled text-white" id="messages">
+
+
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 </body>
 <footer class="bd-footer sticky-bottom">
-    <form id="form" action="">
+    <form id="form" action="" class="customForm">
         <input
                 id="input"
                 autocomplete="off"
