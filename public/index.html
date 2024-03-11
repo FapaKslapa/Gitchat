@@ -32,8 +32,8 @@
             media="screen"
     />
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
     <link rel="stylesheet" href="./style.css"/>
+
 </head>
 
 <body>
@@ -153,6 +153,7 @@
     </div>
 </div>
 <div class="modal fade" id="modalChatAmicizia" tabindex="-1" aria-hidden="true">
+
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -169,33 +170,106 @@
         </div>
     </div>
 </div>
-
-<div class="offcanvas offcanvas-start" tabindex="-1" id="chatOffCanvas">
-    <div class="offcanvas-header">
-        <h2 class="offcanvas-title" id="offcanvasExampleLabel">Chats</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item">Chat 1</li>
-            <li class="list-group-item">Chat 2</li>
-            <li class="list-group-item">Chat 3</li>
-            <li class="list-group-item">Chat 4</li>
-        </ul>
+<div class="modal fade" id="modalProfilo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header border-0 d-flex align-items-start justify-content-center">
+                <h1>PROFILO</h1>
+                <button type="button" class="btn btn-dark btn-lg align-middle ms-auto" data-bs-dismiss="modal"
+                ><span class="material-symbols-rounded align-middle">
+close
+</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <img src="https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg" alt="avatar"
+                             class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="300">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row justify-content-start">
+                            <div class="col-md-auto">
+                                <h2>Nome utente: Fapakslapa</h2>
+                            </div>
+                        </div>
+                        <div class="row justify-content-start mt-3">
+                            <div class="col-md-auto">
+                                <h2>Email: Fapakslapa</h2>
+                            </div>
+                        </div>
+                        <div class="row justify-content-start mt-3">
+                            <div class="col-md-auto">
+                                <h2>Password: Fapakslapa</h2>
+                            </div>
+                        </div>
+                        <div class="row justify-content-start mt-3">
+                            <div class="col-md-auto">
+                                <h2>Numero amici: Fapakslapa</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-info btn-lg align-middle">
+                            Collega <span class="material-symbols-rounded align-middle">
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="inviaAmici">Salva</button>
+            </div>
+        </div>
     </div>
 </div>
+
 <div class="wrapper">
     <nav id="sidebar">
         <div class="row mt-4">
             <div class="sidebar-header">
                 <form class="d-flex" role="search">
-                    <input class="form-control me-2 rounded-5" type="search" placeholder="Search" aria-label="Search">
+                    <input class="form-control me-2 rounded-5" type="search" placeholder="Search"
+                           aria-label="Search">
                 </form>
             </div>
         </div>
         <ul class="list-unstyled components" id="listChat">
 
         </ul>
+        <div class="row mt-4 sidebar-footer d-flex flex-nowrap justify-content-between">
+            <div class="col-md-auto">
+                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                        data-bs-target="#modalNuovaChat">
+            <span class="material-symbols-rounded align-middle">
+                add
+            </span>
+                </button>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                        data-bs-target="#modalAmicizia">
+            <span class="material-symbols-rounded align-middle">
+                group_add
+            </span>
+                </button>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                        data-bs-target="#modalNuovaChat">
+            <span class="material-symbols-rounded align-middle">
+                group
+            </span>
+                </button>
+            </div>
+            <div class="col-md-auto">
+                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                        data-bs-target="#modalProfilo">
+            <span class="material-symbols-rounded align-middle">
+                settings
+            </span>
+                </button>
+            </div>
+        </div>
     </nav>
     <div class="container-fluid">
         <div class="row">

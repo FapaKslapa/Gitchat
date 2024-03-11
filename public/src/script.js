@@ -21,6 +21,17 @@ let chatSelezionata = "";
 let chats = [];
 let username = "";
 let password = "";
+const pastelColors = {
+    rosso: ["#ffadad", "#ffb5b5", "#ffbdbd", "#ffc5c5", "#ffcdcd"],
+    blu: ["#add8e6", "#b2dfee", "#b7e6f6", "#bccdfc", "#c1d4ff"],
+    verde: ["#90ee90", "#98fb98", "#a1f0a1", "#aaf5aa", "#b3fab3"],
+    giallo: ["#ffffe0", "#ffffd5", "#ffffcc", "#ffffc2", "#ffffb8"],
+    viola: ["#dda0dd", "#e6b3e6", "#eeccff", "#f2d1f2", "#f7d6f7"],
+    arancione: ["#ffcc99", "#ffd1a1", "#ffd6a8", "#ffdbb0", "#ffe0b8"],
+    rosa: ["#ffc0cb", "#ffc5d1", "#ffcad7", "#ffcfdd", "#ffd4e3"],
+    azzurro: ["#87ceeb", "#8ed0f8", "#95d3ff", "#9cd6ff", "#a3d9ff"]
+};
+
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
     <img src="%SRC" alt="avatar"
@@ -29,7 +40,7 @@ const templateMessageMio = `
         <div class="card-header d-flex justify-content-between p-3"
              style="border-bottom: 1px solid rgba(255,255,255,.3);">
             <p class="fw-bold mb-0">%USERNAME</p>
-            <p class="text-light small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
+            <p class=" small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
         </div>
         <div class="card-body">
             <p class="mb-0">
@@ -45,7 +56,7 @@ const templateMessageAltro = `
         <div class="card-header d-flex justify-content-between p-3"
              style="border-bottom: 1px solid rgba(255,255,255,.3);">
             <p class="fw-bold mb-0">%USERNAME</p>
-            <p class="text-light small mb-0"><i class="far fa-clock"></i> %TEMPO</p>
+            <p class="small mb-0"><i class="far fa-clock"></i> %TEMPO</p>
         </div>
         <div class="card-body">
             <p class="mb-0">
@@ -139,13 +150,25 @@ function displayMessages(array) {
             const profileImage = user ? `data:image/jpeg;base64,${user.profileImage}` : "https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg";
             const align = IdAutore === username ? "me" : "others";
             const userColor = stringToColour(IdAutore);
-            const formattedTime = new Date(`${Data_invio} ${Ora_invio}`).toLocaleString("it-IT", {
-                year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+
+            // Dividi la stringa di data e ora in due parti
+            const dataParts = Data_invio.split("T");
+            const datePart = dataParts[0];
+            const timePart = Ora_invio;
+
+            // Crea un nuovo oggetto Date utilizzando le due parti
+            const date = new Date(`${datePart}T${timePart}`);
+
+            const formattedDate = date.toLocaleDateString("it-IT", {
+                year: "2-digit", month: "2-digit", day: "2-digit"
+            });
+            const formattedTime = date.toLocaleTimeString("it-IT", {
+                hour: "2-digit", minute: "2-digit"
             });
             if (align === "me") {
-                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", formattedTime)
+                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
             } else {
-                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", formattedTime)
+                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
             }
         })
         .join("");
