@@ -147,15 +147,44 @@ app.get("/user/:username/chats", (req, res) => {
 });
 app.get("/user/:username/friends", (req, res) => {
     const username = req.params.username;
-    const sql = `SELECT IdAccount1 as friend
+    const sql = `SELECT IdAccount1 as username, account1.ImmagineProfilo as fotoProfilo
                  FROM amicizia
+                          JOIN account as account1 ON amicizia.IdAccount1 = account1.Username
                  WHERE IdAccount2 = ?
                  UNION
-                 SELECT IdAccount2 as friend
+                 SELECT IdAccount2 as username, account2.ImmagineProfilo as fotoProfilo
                  FROM amicizia
+                          JOIN account as account2 ON amicizia.IdAccount2 = account2.Username
                  WHERE IdAccount1 = ?`;
     db.query(sql, [username, username], (err, result) => {
         if (err) throw err;
+
+        // Converti le immagini in base64
+        result.forEach((user, index) => {
+            let imagePath = `./images/${user.fotoProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
+            let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
+            result[index].fotoProfilo = imageAsBase64;
+        });
+
+        res.json(result);
+    });
+});
+app.get("/chat/:id/participants", (req, res) => {
+    const chatId = req.params.id;
+    const sql = `SELECT account.Username, account.ImmagineProfilo
+                 FROM account
+                          JOIN partecipazione ON account.Username = partecipazione.IdAccount
+                 WHERE partecipazione.IdChat = ?`;
+    db.query(sql, [chatId], (err, result) => {
+        if (err) res.json({message: "Errore"});
+
+        // Converti le immagini in base64
+        result.forEach((user, index) => {
+            let imagePath = `./images/${user.ImmagineProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
+            let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
+            result[index].ImmagineProfilo = imageAsBase64;
+        });
+
         res.json(result);
     });
 });
@@ -194,15 +223,51 @@ app.post("/chat", (req, res) => {
 app.post("/chat/:id/users", (req, res) => {
     const chatId = req.params.id;
     const {users} = req.body;
-    console.log("ID: " + chatId);
-    users.forEach((user) => {
-        const sqlPartecipazione = `INSERT INTO partecipazione (IdChat, IdAccount)
-                                   VALUES (?, ?)`;
-        db.query(sqlPartecipazione, [chatId, user], (err, result) => {
-            if (err) throw err;
+
+    // Elimina tutti i partecipanti dalla chat
+    const sqlDelete = `DELETE
+                       FROM partecipazione
+                       WHERE IdChat = ?`;
+    db.query(sqlDelete, [chatId], (err, result) => {
+        if (err) throw err;
+
+        // Aggiungi nuovi partecipanti alla chat
+        users.forEach((user) => {
+            const sqlInsert = `INSERT INTO partecipazione (IdChat, IdAccount)
+                               VALUES (?, ?)`;
+            db.query(sqlInsert, [chatId, user], (err, result) => {
+                if (err) throw err;
+            });
         });
+
+        res.json({message: "Utenti aggiornati nella chat con successo"});
     });
-    res.json({message: "Utenti aggiunti alla chat con successo"});
+});
+
+app.post("/chat/:id/user", (req, res) => {
+    const chatId = req.params.id;
+    const {username} = req.body;
+
+    const sqlInsert = `INSERT INTO partecipazione (IdChat, IdAccount)
+                       VALUES (?, ?)`;
+    db.query(sqlInsert, [chatId, username], (err, result) => {
+        if (err) throw err;
+        res.json({message: "Utente aggiunto alla chat con successo"});
+    });
+});
+
+app.delete("/deleteChat/:id/user", (req, res) => {
+    const chatId = req.params.id;
+    const {username} = req.body;
+
+    const sqlDelete = `DELETE
+                       FROM partecipazione
+                       WHERE IdChat = ?
+                         AND IdAccount = ?`;
+    db.query(sqlDelete, [chatId, username], (err, result) => {
+        if (err) throw err;
+        res.json({message: "Utente rimosso dalla chat con successo"});
+    });
 });
 
 app.post("/message", (req, res) => {

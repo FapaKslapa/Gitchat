@@ -126,4 +126,15 @@ export async function addUsersToChat(chatId, users) {
     console.log(data.message);
 }
 
+/**
+ * Funzione per recuperare tutti i partecipanti di una chat.
+ * @param {string} chatId - L'ID della chat.
+ */
+export async function getChatParticipants(chatId) {
+    const response = await fetch(`/chat/${chatId}/participants`);
+    const data = await response.json();
+    console.log(`Partecipanti della chat ${chatId}:`);
+    console.log(data);
+    return data;
+}
 

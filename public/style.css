@@ -1,5 +1,5 @@
 body {
-    font-family: "Lexend";
+    font-family: "Lexend", system-ui;
     margin: 0;
     padding: 0;
     background-color: #101415;
@@ -10,6 +10,29 @@ body {
     width: 100%; /* Questo fa sì che l'header e il footer occupino tutta la larghezza del loro contenitore */
     z-index: 1; /* Questo fa sì che l'header e il footer si sovrappongano agli altri elementi */
 }
+
+.btn-outline-primary {
+    color: #8044C5; /* Colore del testo */
+    border-color: #8044C5; /* Colore del bordo */
+}
+
+.btn-outline-primary:hover {
+    color: #fff !important; /* Colore del testo al passaggio del mouse */
+    background-color: #8044C5 !important; /* Colore di sfondo al passaggio del mouse */
+    border-color: #8044C5 !important; /* Colore del bordo al passaggio del mouse */
+}
+
+
+.btn-outline-primary:focus, .btn-outline-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(128, 68, 197, 0.5); /* Personalizza l'ombra per il focus */
+}
+
+.btn-check:checked + .btn-outline-primary, .btn-check:active + .btn-outline-primary {
+    color: #fff; /* Colore del testo quando è selezionato o attivo */
+    background-color: #8044C5; /* Colore di sfondo quando è selezionato o attivo */
+    border-color: #8044C5; /* Colore del bordo quando è selezionato o attivo */
+}
+
 
 a,
 a:hover,
@@ -23,6 +46,27 @@ a:focus {
     outline: none !important;
     border: none;
 }
+
+/* Sovrascrive il colore di sfondo del modal */
+.modal-content {
+    background-color: #101415 !important; /* Colore di sfondo dei modali */
+}
+
+/* Sovrascrive il colore di sfondo del header del modal */
+.modal-header {
+    background-color: #101415 !important; /* Colore di sfondo dell'header del modal */
+}
+
+/* Sovrascrive il colore di sfondo del body del modal */
+.modal-body {
+    background-color: #101415 !important; /* Colore di sfondo del body del modal */
+}
+
+/* Sovrascrive il colore di sfondo del footer del modal */
+.modal-footer {
+    background-color: #101415 !important; /* Colore di sfondo del footer del modal */
+}
+
 
 .line {
     width: 100%;
@@ -42,7 +86,7 @@ h2 {
 }
 
 h3 {
-    font-family: "Lexend";
+    font-family: "Lexend", system-ui;
     font-size: 1.3em;
 }
 
@@ -50,25 +94,6 @@ img {
     max-width: 80%;
 }
 
-.custom-scrollbar {
-    position: relative;
-    height: 12.5rem;
-    overflow: auto;
-}
-
-.table-scroll-y {
-    display: block;
-}
-
-.canvas_pie {
-    width: 32% !important;
-    height: 32% !important;
-}
-
-.canvas_calendar {
-    width: 80% !important;
-    height: 50% !important;
-}
 
 .btn-primary {
     background-color: #053DEB !important;
@@ -81,37 +106,17 @@ img {
     border: none !important;
 }
 
-.sfondo {
-    background-image: url("./immagini/Sfondo.png");
-    background-size: cover;
-    background-repeat: no-repeat;
-}
 
 .vl {
     border-left: 0.350rem solid white;
     height: 31.25rem;
 }
 
-footer {
-    font-size: 0.9rem;
-}
 
 .text-viola {
     color: #7f43c3;
 }
 
-.card-custom {
-    background-color: rgba(255, 255, 255, 0.13);
-    border-radius: 0.625rem;
-    backdrop-filter: blur(0.625rem);
-    border: 0.125rem solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 2.5rem rgba(8, 7, 16, 0.6);
-}
-
-.img-card {
-    border-radius: 1.5625rem;
-    border: 1rem solid rgba(33, 37, 41, 0);
-}
 
 select {
     background-color: #333;
@@ -128,42 +133,19 @@ select {
 }
 
 
-.custom-carousel-icon {
-    font-size: 1.5rem; /* Imposta la dimensione dell'icona */
-    color: #ffffff; /* Imposta il colore bianco per l'icona */
-}
-
-.carousel-inner img {
-    width: auto; /* Mantieni le proporzioni */
-    height: auto; /* Mantieni le proporzioni */
-}
-
-/* Applica questo stile solo alle images che superano i 500px di larghezza */
-@media screen and (min-width: 50rem) {
-    .carousel-inner img {
-        max-width: 80%; /* Riduci la larghezza massima al 90% */
-    }
-}
-
-.carousel-item img {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.carousel-item video {
-    width: 100%; /* Imposta la larghezza al 100% del contenitore */
-    height: auto; /* Mantieni le proporzioni */
-}
-
-
 #sidebar {
-    position: relative; /* Aggiungi questa linea per creare un contesto di posizionamento per gli elementi figli */
+    position: relative;
     background: #101415;
     color: #fff;
-    overflow-x: hidden; /* Aggiungi questa linea */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh; /* Aggiunto per far sì che il sidebar occupi l'intera altezza della viewport */
 }
 
+.footer-sidebar {
+    order: 1; /* Aggiunto per far sì che il footer sia sempre alla fine del contenitore flex */
+}
 
 .btn-dark {
     background-color: transparent;
@@ -214,8 +196,8 @@ select {
     color: #D9D9D9;
     background: #8044C5;
     border-radius: 0.625rem;
-    border: none; /* Rimuove il colore del bordo */
-    margin: 0.625rem; /* Aggiunge un margine su tutti i lati */
+    border: none;
+    margin: 0.625rem;
 }
 
 #sidebar ul li.active > a,
@@ -264,24 +246,40 @@ a.article:hover {
     color: #fff !important;
 }
 
-/* ---------------------------------------------------
-    MEDIAQUERIES
------------------------------------------------------ */
-
-
-.disabled a {
-    pointer-events: none;
-    color: grey;
+.customForm {
+    position: relative;
+    width: 100%;
+    padding: 1em;
+    z-index: 1000;
 }
 
-#form {
-    bottom: 0;
-    width: calc(100% - 20rem); /* This will take up the rest of the width */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1em;
-    z-index: 1000; /* This ensures the form stays on top of other elements */
+.form-group {
+    position: relative;
+}
+
+.form-control {
+    padding-right: 5rem; /* Spazio per il bottone 'Send' */
+    padding-left: 5rem; /* Spazio per il bottone 'File' */
+}
+
+.file-button {
+    position: absolute;
+    top: 50%;
+    left: 0.625rem;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+.file-input {
+    display: none;
+}
+
+.send-button {
+    position: absolute;
+    top: 50%;
+    right: 0.625rem;
+    transform: translateY(-50%);
+    z-index: 10;
 }
 
 
@@ -296,8 +294,13 @@ a.article:hover {
     color: #101415;
 }
 
+#messaggio {
+    resize: none;
+}
+
+
 .card-full-page {
-    height: calc(100vh - 2.5rem - 3.5rem - 2.5rem);
+    height: calc(100vh - 5.5rem - 3.5rem - 2.5rem);
     overflow-y: auto;
     border: 0.0625rem solid gray;
     border-radius: 0.625rem;

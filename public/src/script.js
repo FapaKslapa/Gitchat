@@ -1,10 +1,10 @@
 import {
-    getChatMessages, getUserChats, getUserFriends, createChat, addFriendship, addUsersToChat,
+    getChatMessages, getUserChats, getUserFriends, createChat, addFriendship, addUsersToChat, getChatParticipants
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
 const form = document.getElementById("form");
-const input = document.getElementById("input");
+const input = document.getElementById("messaggio");
 const roomInput = document.getElementById("room");
 const usernameInput = document.getElementById("username"); // Aggiungi un campo di input per l'username
 const messages = document.getElementById("messages");
@@ -18,6 +18,7 @@ const usernameFriend = document.getElementById("usernameFriend");
 const boxAmicizia = document.getElementById("checkBoxAmicizia");
 const inviaAmicizia = document.getElementById("inviaAmici");
 let chatSelezionata = "";
+const invita = document.getElementById("invitaInChat");
 let chats = [];
 let username = "";
 let password = "";
@@ -29,11 +30,11 @@ const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E",
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
     <img src="%SRC" alt="avatar"
-         class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60">
-    <div class="card mask-custom w-50">
-        <div class="card-header d-flex justify-content-between p-3"
+         class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60" style="margin-right: 10px;">
+    <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
+        <div class="card-header d-flex justify-content-between p-3 align-items-center"
              style="border-bottom: 1px solid rgba(255,255,255,.3);">
-            <p class="fw-bold mb-0">%USERNAME</p>
+            <p class="fw-bold mb-0" style="margin-right: 10px;">%USERNAME</p>
             <p class=" small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
         </div>
         <div class="card-body">
@@ -46,10 +47,10 @@ const templateMessageMio = `
 
 const templateMessageAltro = `
 <li class="d-flex justify-content-end mb-4">
-    <div class="card mask-custom w-50">
-        <div class="card-header d-flex justify-content-between p-3"
+    <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
+        <div class="card-header d-flex justify-content-between p-3 align-items-center"
              style="border-bottom: 1px solid rgba(255,255,255,.3);">
-            <p class="fw-bold mb-0">%USERNAME</p>
+            <p class="fw-bold mb-0" style="margin-right: 10px;">%USERNAME</p>
             <p class="small mb-0"><i class="far fa-clock"></i> %TEMPO</p>
         </div>
         <div class="card-body">
@@ -59,7 +60,7 @@ const templateMessageAltro = `
         </div>
     </div>
     <img src="%SRC" alt="avatar"
-         class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
+         class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
 </li>`;
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "/accedi.html";
@@ -88,10 +89,7 @@ getUserChats(username).then((data) => {
     listChat.innerHTML = data
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
-            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}<button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                           id="invita_${chat.IdChat}" data-bs-target="#modalChatAmicizia">
-                        Amicizia
-                    </button>
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
                     <p>${usernames}</p></a>
                     </li>`;
         })
@@ -176,21 +174,28 @@ roomInput.value = "";
 room = "";
 messages.innerHTML = "";
 */
-const renderInvito = (array) => {
+const renderInvito = (array, partecipanti) => {
     console.log(array);
+    console.log(partecipanti);
     boxAmicizia.innerHTML = array
         .map((user) => {
-            return `<div class="form-check">
-        <input class="form-check-input" type="checkbox" value="${user.friend}" id="flexCheckDefault"/>
-        <label class="form-check-label" for="flexCheckDefault">
-            ${user.friend}
-        </label>
-    </div>`;
+            const isChecked = partecipanti.some(partecipante => partecipante.Username === user.username) ? 'checked' : '';
+            return `<div class="row mt-3 d-flex align-items-center">
+<div class="col-md-auto">
+<img src="data:image/jpeg;base64,${user.fotoProfilo}" alt="avatar"
+                             class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="50">
+</div>
+<div class="col-md-auto align-middle">
+<h3 class="align-middle">${user.username}</h3>
+</div>
+<div class="col-md-auto align-middle">
+<input type="checkbox" class="btn-check" id="${user.username}" value="${user.username}" autocomplete="off" ${isChecked}>
+<label class="btn btn-outline-primary" for="${user.username}">Seleziona</label>
+</div>
+</div>`;
         })
         .join("");
-
 }
-
 // Definisci le funzioni di gestione degli eventi fuori dal ciclo for
 const handleClick = (i, array) => {
     console.log("Click");
@@ -211,51 +216,58 @@ const handleClick = (i, array) => {
     });
 };
 
-const handleInvitoClick = (username) => {
+
+invita.onclick = () => {
     getUserFriends(username).then((data) => {
         console.log("Room: " + room);
-        renderInvito(data);
-        inviaAmicizia.onclick = () => {
-            const arrayAggiunta = [];
-            const checkboxes = document.querySelectorAll("#checkBoxAmicizia .form-check-input");
-            checkboxes.forEach((checkbox, index) => {
-                if (checkbox.checked) {
-                    arrayAggiunta.push(checkbox.value);
-                }
-            });
-            addUsersToChat(room, arrayAggiunta).then((data) => {
-                console.log(data);
-            });
-        }
+        getChatParticipants(room).then((partecipanti) => {
+            console.log("Partecipanti: " + partecipanti);
+            renderInvito(data, partecipanti);
+        });
     });
-};
+}
 
+function getSelectedCheckboxes(personale) {
+    // Get all checkboxes
+    const checkboxes = document.querySelectorAll('.btn-check');
+    let selectedValues = [];
+
+    // Loop through each checkbox
+    for (let i = 0; i < checkboxes.length; i++) {
+        // If the checkbox is checked, add its value to the array
+        if (checkboxes[i].checked) {
+            selectedValues.push(checkboxes[i].value);
+        }
+    }
+    selectedValues.push(personale);
+    return selectedValues;
+}
+
+inviaAmicizia.onclick = () => {
+    const arrayAggiunta = getSelectedCheckboxes(username);
+    addUsersToChat(room, arrayAggiunta).then((data) => {
+        console.log(data);
+    });
+}
 // Crea un oggetto per memorizzare le funzioni di gestione degli eventi
 const eventHandlers = {};
 
 const renderChat = (array) => {
     for (let i = 0; i < array.length; i++) {
         const buttonTmp = document.getElementById(`chat_${array[i].IdChat}`);
-        const buttonTmpInvito = document.getElementById(`invita_${array[i].IdChat}`);
 
         // Se esistono vecchi gestori di eventi, rimuovili
         if (eventHandlers[`chat_${array[i].IdChat}`]) {
             buttonTmp.removeEventListener("click", eventHandlers[`chat_${array[i].IdChat}`]);
         }
-        if (eventHandlers[`invita_${array[i].IdChat}`]) {
-            buttonTmpInvito.removeEventListener("click", eventHandlers[`invita_${array[i].IdChat}`]);
-        }
 
         // Crea nuovi gestori di eventi
         const newClickHandler = () => handleClick(i, array);
-        const newInvitoClickHandler = () => handleInvitoClick(username);
 
         // Memorizza i nuovi gestori di eventi
         eventHandlers[`chat_${array[i].IdChat}`] = newClickHandler;
-        eventHandlers[`invita_${array[i].IdChat}`] = newInvitoClickHandler;
 
         // Aggiungi i nuovi gestori di eventi
         buttonTmp.addEventListener("click", newClickHandler, false);
-        buttonTmpInvito.addEventListener("click", newInvitoClickHandler, false);
     }
 };

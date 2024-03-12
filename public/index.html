@@ -38,11 +38,14 @@
 
 <body>
 <div class="modal fade" id="modalNuovaChat" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Crea nuova chat</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0">
+                <h1>Crea una nuova chat</h1>
+                <button type="button" class="btn btn-dark btn-lg align-middle ms-auto" data-bs-dismiss="modal"
+                ><span class="material-symbols-rounded align-middle">
+close
+</span></button>
             </div>
             <form onsubmit="return false">
                 <div class="modal-body">
@@ -65,8 +68,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary" id="newChat">Crea chat</button>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary btn-lg align-middle" id="newChat">Crea chat <span
+                            class="material-symbols-rounded align-middle">
+forum
+</span></button>
                 </div>
             </form>
         </div>
@@ -108,18 +114,24 @@
     </div>
 </div>
 <div class="modal fade" id="modalChatAmicizia" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="nomeChatAmico">Invita alla chat</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-0">
+                <h1>Invita alla chat</h1>
+                <button type="button" class="btn btn-dark btn-lg align-middle ms-auto" data-bs-dismiss="modal"
+                ><span class="material-symbols-rounded align-middle">
+close
+</span></button>
             </div>
             <div class="modal-body">
                 <div id="checkBoxAmicizia">
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="inviaAmici">Salva</button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary btn-lg align-middle" id="inviaAmici">Invita <span
+                        class="material-symbols-rounded align-middle">
+group_add
+</span></button>
             </div>
         </div>
     </div>
@@ -174,7 +186,7 @@ close
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="inviaAmici">Salva</button>
+                <button type="button" class="btn btn-primary" id="">Salva</button>
             </div>
         </div>
     </div>
@@ -184,15 +196,13 @@ close
     <div class="row justify-content-start">
         <div class="col-md-3">
             <div id="sidebar" class="col-auto">
-                <div class="row mt-4">
-                    <div class="sidebar-header">
-                        <form class="d-flex" role="search">
-                            <input class="form-control me-2 rounded-5" type="search" placeholder="Search"
-                                   aria-label="Search">
-                        </form>
-                    </div>
+                <div class="row mt-2 sidebar-header">
+                    <form class="" role="search">
+                        <input class="form-control rounded-5" type="search" placeholder="Search"
+                               aria-label="Search">
+                    </form>
                 </div>
-                <div class="row">
+                <div class="row mt-5">
                     <ul class="list-unstyled components" id="listChat">
 
                     </ul>
@@ -252,11 +262,10 @@ close
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                                 <li class="nav-item">
-                                    <a href="../index.html" class="nav-link active"
-                                    ><span class="material-symbols-rounded align-middle"
-                                    >home</span
-                                    ></a
-                                    >
+                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
+                                            id="invitaInChat" data-bs-target="#modalChatAmicizia">
+                                        Amicizia
+                                    </button>
                                 </li>
                                 <li class="nav-item">
                                     <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas"
@@ -292,16 +301,18 @@ close
                 </div>
             </div>
             <form id="form" action="" class="customForm">
-                <input
-                        id="input"
-                        autocomplete="off"
-                        placeholder="Enter your message"
-                        class="form-control rounded-4"
-                        required
-                />
-                <button class="btn btn-outline-light rounded-4" type="submit" id="invia">
-                    Send
-                </button>
+                <div class="form-group">
+                    <textarea class="form-control" id="messaggio" rows="3" placeholder="Scrivi un messaggio"></textarea>
+                    <label for="file-input" class="btn btn-primary file-button align-middle"><span
+                            class="material-symbols-rounded align-middle">
+attach_file
+</span></label>
+                    <input id="file-input" type="file" class="file-input"/>
+                    <button class="btn btn-info send-button align-middle" type="submit" id="invia"><span
+                            class="material-symbols-rounded align-middle">
+send
+</span></button>
+                </div>
             </form>
         </div>
     </div>
