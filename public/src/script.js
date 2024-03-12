@@ -21,16 +21,10 @@ let chatSelezionata = "";
 let chats = [];
 let username = "";
 let password = "";
-const pastelColors = {
-    rosso: ["#ffadad", "#ffb5b5", "#ffbdbd", "#ffc5c5", "#ffcdcd"],
-    blu: ["#add8e6", "#b2dfee", "#b7e6f6", "#bccdfc", "#c1d4ff"],
-    verde: ["#90ee90", "#98fb98", "#a1f0a1", "#aaf5aa", "#b3fab3"],
-    giallo: ["#ffffe0", "#ffffd5", "#ffffcc", "#ffffc2", "#ffffb8"],
-    viola: ["#dda0dd", "#e6b3e6", "#eeccff", "#f2d1f2", "#f7d6f7"],
-    arancione: ["#ffcc99", "#ffd1a1", "#ffd6a8", "#ffdbb0", "#ffe0b8"],
-    rosa: ["#ffc0cb", "#ffc5d1", "#ffcad7", "#ffcfdd", "#ffd4e3"],
-    azzurro: ["#87ceeb", "#8ed0f8", "#95d3ff", "#9cd6ff", "#a3d9ff"]
-};
+const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E",
+    "#F63E02", "#46237A", "#256EFF", "#FF495C",
+    "#FEE440", "#00BBF9", "#00F5D4", "#72B01D",
+    "#3F7D20", "#348AA7", "#440D0F"];
 
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
@@ -129,18 +123,8 @@ form.addEventListener("submit", (e) => {
 
 let messageData = []; // Array per salvare i dati dei messaggi
 
-function stringToColour(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    let colour = '#';
-    for (let i = 0; i < 3; i++) {
-        const value = (hash >> (i * 8)) & 0xFF;
-        colour += ('00' + value.toString(16)).substr(-2);
-    }
-    return colour;
-}
+let userColors = {};
+let colorIndex = 0;
 
 function displayMessages(array) {
     const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
@@ -149,7 +133,14 @@ function displayMessages(array) {
             const user = chat ? chat.users.find(user => user.username === IdAutore) : null;
             const profileImage = user ? `data:image/jpeg;base64,${user.profileImage}` : "https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg";
             const align = IdAutore === username ? "me" : "others";
-            const userColor = stringToColour(IdAutore);
+
+            // Assign a color to the user if they don't have one yet
+            if (!userColors[IdAutore]) {
+                const randomIndex = Math.floor(Math.random() * pastelColors.length);
+                userColors[IdAutore] = pastelColors[randomIndex];
+            }
+
+            const userColor = userColors[IdAutore];
 
             // Dividi la stringa di data e ora in due parti
             const dataParts = Data_invio.split("T");

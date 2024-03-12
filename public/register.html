@@ -64,7 +64,7 @@
                     <hr class="border border-light border-3 opacity-100">
                 </div>
                 <div class="row mt-3">
-                    <div class="col-4">
+                    <div class="col-6">
                         <div class="col">
                             <div class="form-label-group outline">
                                 <input
@@ -80,7 +80,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-4">
+                    <div class="col-6">
                         <div class="col">
                             <div class="form-label-group outline">
                                 <input
@@ -99,7 +99,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mt-5">
+                <div class="row mt-1">
                     <div class="col d-flex">
                         <div class="flex-grow-1 input-space">
                             <div class="form-label-group outline">
@@ -108,6 +108,7 @@
                                         id="password"
                                         class="form-control shadow-none border-light"
                                         placeholder=""
+                                        required
                                 />
                                 <span
                                 ><label for="password" class="text-white"
@@ -133,13 +134,45 @@
                     </div>
                 </div>
                 <div class="row mt-1">
-                    <div class="col-auto">
+                    <div class="col d-flex">
+                        <div class="flex-grow-1 input-space">
+                            <div class="form-label-group outline">
+                                <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        class="form-control shadow-none border-light"
+                                        placeholder=""
+                                        required
+                                />
+                                <span
+                                ><label for="confirmPassword" class="text-white"
+                                >Conferma password</label
+                                ></span
+                                >
+                            </div>
+                        </div>
+                        <div class="flex-shrink-1">
+                            <button
+                                    type="button"
+                                    id="visualizzaConferma"
+                                    class="btn btn-outline-light align-middle"
+                            >
+                        <span
+                                class="material-symbols-rounded align-middle"
+                                id="changeConfmera"
+                        >
+                          visibility
+                        </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row justify-content-end mt-3">
+                    <div class="col">
                         <a href="./register.html"
                            class="link-light link-offset-2 link-underline-opacity-100-hover">Non
                             hai un account? Registrati</a>
                     </div>
-                </div>
-                <div class="row justify-content-end mt-5">
                     <div class="col-auto">
                         <button
                                 class="btn btn-info btn-lg rounded-3"
@@ -165,112 +198,6 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <div class="col d-flex justify-content-center align-items-center">
-        <div class="col-md-3 align-self-center">
-            <div class="card card-custom">
-                <div class="card-body">
-                    <h2 class="card-title">Crea il tuo account</h2>
-                    <div class="row mt-3">
-                        <div
-                                class="alert alert-danger invisible"
-                                role="alert"
-                                id="errore"
-                        >
-                            Errore! Riprova
-                        </div>
-                    </div>
-                    <form onsubmit="return false">
-
-                        <div class="row mt-1">
-                            <div class="col d-flex">
-                                <div class="flex-grow-1 input-space">
-                                    <div class="form-label-group outline">
-                                        <input
-                                                type="password"
-                                                id="password"
-                                                class="form-control shadow-none border-light"
-                                                placeholder=""
-                                                required
-                                        />
-                                        <span
-                                        ><label for="password" class="text-white"
-                                        >Password</label
-                                        ></span
-                                        >
-                                    </div>
-                                </div>
-                                <div class="flex-shrink-1">
-                                    <button
-                                            type="button"
-                                            id="visualizza"
-                                            class="btn btn-outline-light align-middle"
-                                    >
-                        <span
-                                class="material-symbols-rounded align-middle"
-                                id="change"
-                        >
-                          visibility
-                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-1">
-                            <div class="col d-flex">
-                                <div class="flex-grow-1 input-space">
-                                    <div class="form-label-group outline">
-                                        <input
-                                                type="password"
-                                                id="confirmPassword"
-                                                class="form-control shadow-none border-light"
-                                                placeholder=""
-                                                required
-                                        />
-                                        <span
-                                        ><label for="confirmPassword" class="text-white"
-                                        >Conferma password</label
-                                        ></span
-                                        >
-                                    </div>
-                                </div>
-                                <div class="flex-shrink-1">
-                                    <button
-                                            type="button"
-                                            id="visualizzaConferma"
-                                            class="btn btn-outline-light align-middle"
-                                    >
-                        <span
-                                class="material-symbols-rounded align-middle"
-                                id="changeConfmera"
-                        >
-                          visibility
-                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-1">
-                            <div class="col-auto">
-                                <a href="./accedi.html" class="text-white">Hai già un account? Accedi</a>
-                            </div>
-                        </div>
-                        <div class="row justify-content-end mt-5">
-                            <div class="col-auto">
-                                <button
-                                        class="btn btn-primary rounded-3"
-                                        type="submit"
-                                        id="crea"
-                                >
-                                    Crea account
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 </div>
