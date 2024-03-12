@@ -37,51 +37,6 @@
 </head>
 
 <body>
-<nav class="navbar navbar-expand-lg">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">Git chat</a>
-        <button
-                class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent"
-                aria-expanded="false"
-                aria-label="Toggle navigation"
-        >
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a href="../index.html" class="nav-link active"
-                    ><span class="material-symbols-rounded align-middle"
-                    >home</span
-                    ></a
-                    >
-                </li>
-                <li class="nav-item">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas"
-                            data-bs-target="#chatOffCanvas" id="chats">
-                        Chats
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
-                            data-bs-target="#modalNuovaChat">
-                        new chat
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
-                            data-bs-target="#modalAmicizia">
-                        Amicizia
-                    </button>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
 <div class="modal fade" id="modalNuovaChat" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -153,7 +108,6 @@
     </div>
 </div>
 <div class="modal fade" id="modalChatAmicizia" tabindex="-1" aria-hidden="true">
-
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -226,81 +180,132 @@ close
     </div>
 </div>
 
-<div class="wrapper">
-    <nav id="sidebar">
-        <div class="row mt-4">
-            <div class="sidebar-header">
-                <form class="d-flex" role="search">
-                    <input class="form-control me-2 rounded-5" type="search" placeholder="Search"
-                           aria-label="Search">
-                </form>
-            </div>
-        </div>
-        <ul class="list-unstyled components" id="listChat">
-
-        </ul>
-        <div class="row mt-4 sidebar-footer d-flex flex-nowrap justify-content-between">
-            <div class="col-md-auto">
-                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                        data-bs-target="#modalNuovaChat">
-            <span class="material-symbols-rounded align-middle">
-                add
-            </span>
-                </button>
-            </div>
-            <div class="col-md-auto">
-                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                        data-bs-target="#modalAmicizia">
-            <span class="material-symbols-rounded align-middle">
-                group_add
-            </span>
-                </button>
-            </div>
-            <div class="col-md-auto">
-                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                        data-bs-target="#modalNuovaChat">
-            <span class="material-symbols-rounded align-middle">
-                group
-            </span>
-                </button>
-            </div>
-            <div class="col-md-auto">
-                <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                        data-bs-target="#modalProfilo">
-            <span class="material-symbols-rounded align-middle">
-                settings
-            </span>
-                </button>
-            </div>
-        </div>
-    </nav>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card-full-page">
-                    <ul class="list-unstyled text-white" id="messages">
-
+<div class="container-fluid">
+    <div class="row justify-content-start">
+        <div class="col-md-3">
+            <div id="sidebar" class="col-auto">
+                <div class="row mt-4">
+                    <div class="sidebar-header">
+                        <form class="d-flex" role="search">
+                            <input class="form-control me-2 rounded-5" type="search" placeholder="Search"
+                                   aria-label="Search">
+                        </form>
+                    </div>
+                </div>
+                <div class="row">
+                    <ul class="list-unstyled components" id="listChat">
 
                     </ul>
                 </div>
+                <div class="row justify-content-between footer-sidebar">
+                    <div class="col-auto">
+                        <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                                data-bs-target="#modalNuovaChat">
+            <span class="material-symbols-rounded align-middle">
+                add
+            </span>
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                                data-bs-target="#modalAmicizia">
+            <span class="material-symbols-rounded align-middle">
+                group_add
+            </span>
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                                data-bs-target="#modalNuovaChat">
+            <span class="material-symbols-rounded align-middle">
+                group
+            </span>
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
+                                data-bs-target="#modalProfilo">
+            <span class="material-symbols-rounded align-middle">
+                settings
+            </span>
+                        </button>
+                    </div>
+                </div>
             </div>
+        </div>
+        <div class="col-md-9">
+            <div class="container-fluid">
+                <nav class="navbar navbar-expand-lg navbar-home">
+                    <div class="container-fluid">
+                        <a class="navbar-brand" href="#">Git chat</a>
+                        <button
+                                class="navbar-toggler"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#navbarSupportedContent"
+                                aria-controls="navbarSupportedContent"
+                                aria-expanded="false"
+                                aria-label="Toggle navigation"
+                        >
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                                <li class="nav-item">
+                                    <a href="../index.html" class="nav-link active"
+                                    ><span class="material-symbols-rounded align-middle"
+                                    >home</span
+                                    ></a
+                                    >
+                                </li>
+                                <li class="nav-item">
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas"
+                                            data-bs-target="#chatOffCanvas" id="chats">
+                                        Chats
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                                            data-bs-target="#modalNuovaChat">
+                                        new chat
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="modal"
+                                            data-bs-target="#modalAmicizia">
+                                        Amicizia
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card-full-page">
+                            <ul class="list-unstyled text-white" id="messages">
+
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form id="form" action="" class="customForm">
+                <input
+                        id="input"
+                        autocomplete="off"
+                        placeholder="Enter your message"
+                        class="form-control rounded-4"
+                        required
+                />
+                <button class="btn btn-outline-light rounded-4" type="submit" id="invia">
+                    Send
+                </button>
+            </form>
         </div>
     </div>
 </div>
 </body>
-<footer class="bd-footer sticky-bottom">
-    <form id="form" action="" class="customForm">
-        <input
-                id="input"
-                autocomplete="off"
-                placeholder="Enter your message"
-                class="form-control rounded-4"
-                required
-        />
-        <button class="btn btn-outline-light rounded-4" type="submit" id="invia">
-            Send
-        </button>
-    </form>
-</footer>
 <script type="module" src="./src/script.js"></script>
 </html>

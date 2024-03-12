@@ -2,8 +2,13 @@ body {
     font-family: "Lexend";
     margin: 0;
     padding: 0;
-    overflow: hidden;
     background-color: #101415;
+}
+
+.sidebar-header, .sidebar-footer {
+    position: absolute; /* Questo permette di posizionare l'header e il footer in qualsiasi punto del loro contenitore */
+    width: 100%; /* Questo fa sì che l'header e il footer occupino tutta la larghezza del loro contenitore */
+    z-index: 1; /* Questo fa sì che l'header e il footer si sovrappongano agli altri elementi */
 }
 
 a,
@@ -151,62 +156,20 @@ select {
     height: auto; /* Mantieni le proporzioni */
 }
 
-.wrapper {
-    display: flex;
-    width: 100%;
-    align-items: stretch;
-    flex-shrink: 0;
-}
 
 #sidebar {
-    position: fixed;
-    min-width: 20rem;
-    max-width: 20rem;
+    position: relative; /* Aggiungi questa linea per creare un contesto di posizionamento per gli elementi figli */
     background: #101415;
     color: #fff;
-    transition: all 0.3s;
     overflow-x: hidden; /* Aggiungi questa linea */
-    top: 0;
 }
 
-#sidebar.active {
-    margin-left: -20rem;
-}
-
-.sidebar-footer {
-    flex-grow: 1;
-    width: auto;
-}
-
-#sidebar .sidebar-footer {
-    margin-bottom: 0.6rem;
-}
 
 .btn-dark {
     background-color: transparent;
     border: none; /* This will remove the border */
 }
 
-#sidebar .sidebar-footer .col-md-auto:first-child {
-    margin-left: 0.6rem;
-}
-
-#sidebar .sidebar-footer .col-md-auto:last-child {
-    margin-right: 0.6rem;
-}
-
-#sidebar .sidebar-header {
-    padding: 0rem 1.875rem;
-}
-
-.row.sidebar-footer {
-    justify-content: space-between;
-    margin-bottom: 0.6rem;
-}
-
-#content {
-    margin-left: 20rem; /* Aggiungi questa linea */
-}
 
 #sidebar ul.components {
     padding: 1.25rem 0;
@@ -214,9 +177,6 @@ select {
     overflow-y: scroll;
 }
 
-.container-fluid {
-    margin-left: 20rem; /* This should be the width of your sidebar */
-}
 
 .container-fluid-accedi {
     margin-left: 0;
@@ -280,11 +240,6 @@ a[data-toggle="collapse"] {
     transform: translateY(-50%);
 }
 
-ul ul a {
-    font-size: 0.9em !important;
-    padding-left: 1.875rem !important;
-    background: #6d7fcc;
-}
 
 ul.CTAs {
     padding: 1.25rem;
@@ -310,33 +265,9 @@ a.article:hover {
 }
 
 /* ---------------------------------------------------
-    CONTENT STYLE
------------------------------------------------------ */
-
-#content {
-    width: 100%;
-    padding: 1.25rem;
-    min-height: 100vh;
-    transition: all 0.3s;
-}
-
-/* ---------------------------------------------------
     MEDIAQUERIES
 ----------------------------------------------------- */
 
-@media (max-width: 48rem) {
-    #sidebar {
-        margin-left: -20rem;
-    }
-
-    #sidebar.active {
-        margin-left: 0;
-    }
-
-    #sidebarCollapse span {
-        display: none;
-    }
-}
 
 .disabled a {
     pointer-events: none;
@@ -344,7 +275,6 @@ a.article:hover {
 }
 
 #form {
-    position: fixed;
     bottom: 0;
     width: calc(100% - 20rem); /* This will take up the rest of the width */
     display: flex;
@@ -352,10 +282,6 @@ a.article:hover {
     justify-content: space-between;
     padding: 1em;
     z-index: 1000; /* This ensures the form stays on top of other elements */
-}
-
-.customForm {
-    left: 20rem; /* This should be the width of your sidebar */
 }
 
 
@@ -371,22 +297,33 @@ a.article:hover {
 }
 
 .card-full-page {
-    position: relative;
-    width: calc(100% - 2.5rem);
-    max-width: calc(100% - 20rem); /* sottrai la larghezza della sidebar */
     height: calc(100vh - 2.5rem - 3.5rem - 2.5rem);
     overflow-y: auto;
-    padding: 1.25rem;
-    box-sizing: border-box;
-    margin: 1.25rem;
     border: 0.0625rem solid gray;
     border-radius: 0.625rem;
 }
 
-/* Imposta una larghezza massima per i dispositivi con una larghezza di viewport inferiore a 600px */
-@media (max-width: 600px) {
-    .card-full-page {
-        max-width: 100%; /* Imposta la larghezza massima al 100% per i dispositivi mobili */
+/* Nascondi la barra di scorrimento per le finestre del browser più larghe */
+@media (min-width: 800px) {
+    body::-webkit-scrollbar {
+        display: none;
+    }
+
+    body {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+}
+
+/* Mostra la barra di scorrimento per le finestre del browser più piccole */
+@media (max-width: 800px) {
+    body::-webkit-scrollbar {
+        display: block;
+    }
+
+    body {
+        -ms-overflow-style: auto; /* IE and Edge */
+        scrollbar-width: auto; /* Firefox */
     }
 }
 
@@ -407,7 +344,7 @@ a.article:hover {
     border-radius: 1.25rem;
     border: 0.375rem solid transparent;
     background-clip: content-box;
-    width: 0.9rem;
+    width: 1.2rem;;
 }
 
 ::-webkit-scrollbar-thumb:hover {
