@@ -45,10 +45,13 @@ io.on("connection", (socket) => {
 
     // Ascolta i messaggi di chat e li trasmette a tutti nella stessa room
     socket.on("chat message", (room, {username, message, timestamp}) => {
-        let dateObject = new Date(timestamp);
-        let date = dateObject.toLocaleDateString();
-        let time = dateObject.toLocaleTimeString();
-        io.to(room).emit("chat message", {IdAutore: username, Testo: message, Data_invio: date, Ora_invio: time}); // Trasmetti l'username e il messaggio
+        let [date, time] = timestamp.split(", ");
+        let [day, month, year] = date.split("/");
+        year = "20" + year; // Add the century to the year
+        let dateObject = new Date(`${year}-${month}-${day}T${time}`);
+        let isoString = dateObject.toISOString();
+        console.log(isoString, time);
+        io.to(room).emit("chat message", {IdAutore: username, Testo: message, Data_invio: isoString, Ora_invio: time}); // Trasmetti l'username e il messaggio
         // Aggiungi il messaggio all'array temporaneo
         if (!temporaryMessages[room]) {
             temporaryMessages[room] = [];
@@ -79,6 +82,14 @@ app.get("/chat/:id/messages", (req, res) => {
                  ORDER BY Data_invio, Ora_invio `;
     db.query(sql, [chatId], (err, result) => {
         if (err) res.json({message: "Errore"});
+        console.log(result);
+        // Modifica le date restituite dal database
+        result.forEach(message => {
+            let dateFromDb = message.Data_invio; // la tua data dal database
+            let date = new Date(dateFromDb);
+            date.setDate(date.getDate() + 1);
+            message.Data_invio = date.toISOString();
+        });
         res.json(result);
     });
 });
@@ -90,14 +101,17 @@ const saveMessagesToDatabase = (room) => {
         // Connect to the database and save the messages
         messages.forEach(({username, message, timestamp}) => {
             messageId = uuidv4();
-            let dateObject = new Date(timestamp);
-            let date = `${dateObject.getFullYear()}-${('0' + (dateObject.getMonth() + 1)).slice(-2)}-${('0' + dateObject.getDate()).slice(-2)}`;
-            let time = dateObject.toLocaleTimeString();
-            console.log(timestamp);
-            console.log(date);
+            let [date, time] = timestamp.split(", ");
+            let [day, month, year] = date.split("/");
+            year = "20" + year; // Add the century to the year
+            month = month - 1; // Subtract 1 from the month
+            let dateObject = new Date(year, month, day, ...time.split(':'));
+            let sqlDate = dateObject.toISOString().split('T')[0]; // Get the date part in 'YYYY-MM-DD' format
+            let sqlTime = dateObject.toTimeString().split(' ')[0]; // Get the time part in 'HH:MM:SS' format
+            console.log(sqlDate, sqlTime);
             const sqlMessage = `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
                                 VALUES (?, ?, ?, ?, ?, ?)`;
-            db.query(sqlMessage, [messageId, message, date, time, username, room], (err, result) => {
+            db.query(sqlMessage, [messageId, message, sqlDate, sqlTime, username, room], (err, result) => {
                 if (err) throw err;
             });
         });
@@ -151,24 +165,26 @@ app.get("/user/:username/friends", (req, res) => {
                  FROM amicizia
                           JOIN account as account1 ON amicizia.IdAccount1 = account1.Username
                  WHERE IdAccount2 = ?
+                   AND stato = true
                  UNION
                  SELECT IdAccount2 as username, account2.ImmagineProfilo as fotoProfilo
                  FROM amicizia
                           JOIN account as account2 ON amicizia.IdAccount2 = account2.Username
-                 WHERE IdAccount1 = ?`;
+                 WHERE IdAccount1 = ?
+                   AND stato = true`;
     db.query(sql, [username, username], (err, result) => {
         if (err) throw err;
 
         // Converti le immagini in base64
         result.forEach((user, index) => {
             let imagePath = `./images/${user.fotoProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
-            let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
-            result[index].fotoProfilo = imageAsBase64;
+            result[index].fotoProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
         });
 
         res.json(result);
     });
 });
+
 app.get("/chat/:id/participants", (req, res) => {
     const chatId = req.params.id;
     const sql = `SELECT account.Username, account.ImmagineProfilo
@@ -181,8 +197,7 @@ app.get("/chat/:id/participants", (req, res) => {
         // Converti le immagini in base64
         result.forEach((user, index) => {
             let imagePath = `./images/${user.ImmagineProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
-            let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
-            result[index].ImmagineProfilo = imageAsBase64;
+            result[index].ImmagineProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
         });
 
         res.json(result);
@@ -203,7 +218,7 @@ app.post("/user", (req, res) => {
 app.post("/chat", (req, res) => {
     const {users, nomeChat} = req.body;
     const DataCreazione = new Date();
-    const chatId = uuidv4();
+    const chatId = uuidv4(undefined, undefined, undefined);
     const sqlChat = `INSERT INTO chat (Id, DataCreazione, NomeChat)
                      VALUES (?, ?, ?)`;
     db.query(sqlChat, [chatId, DataCreazione, nomeChat], (err, result) => {
@@ -274,7 +289,7 @@ app.post("/message", (req, res) => {
     const {Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat} = req.body;
     const sql = `INSERT INTO messaggio (Id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
                  VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const id = uuidv4();
+    const id = uuidv4(undefined, undefined, undefined);
     db.query(sql, [id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat], (err, result) => {
         if (err) throw err;
         res.json({message: "Messaggio creato con successo"});
@@ -399,6 +414,112 @@ app.post("/register", (req, res) => {
                 if (err) return res.status(500).json({message: "An error occurred during registration"});
 
                 res.json({message: "Registration successful"});
+            });
+        });
+    });
+});
+
+app.get("/user/:username/unaccepted-friendships", (req, res) => {
+    const username = req.params.username;
+    const sql = `SELECT account1.Username as username, account1.ImmagineProfilo as fotoProfilo
+                 FROM amicizia
+                          JOIN account as account1 ON amicizia.IdAccount1 = account1.Username
+                 WHERE IdAccount2 = ?
+                   AND Stato = 0`;
+    db.query(sql, [username], (err, result) => {
+        if (err) throw err;
+
+        // Converti le immagini in base64
+        result.forEach((user, index) => {
+            let imagePath = `./images/${user.fotoProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
+            result[index].fotoProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
+        });
+
+        res.json(result);
+    });
+});
+
+app.put("/friendship/accept", (req, res) => {
+    const {username1, username2} = req.body;
+
+    // Check if both users exist
+    if (username1 === username2) {
+        return res.status(400).json({message: "The usernames cannot be the same"});
+    }
+
+    const checkUsersSql = `SELECT *
+                           FROM account
+                           WHERE Username IN (?, ?)`;
+    db.query(checkUsersSql, [username1, username2], (err, result) => {
+        if (err) throw err;
+
+        if (result.length < 2) {
+            return res.status(400).json({message: "One or both users do not exist"});
+        }
+
+        // Check if friendship already exists
+        const checkFriendshipSql = `SELECT *
+                                    FROM amicizia
+                                    WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                       OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+        db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+            if (err) throw err;
+
+            if (result.length === 0) {
+                return res.status(400).json({message: "Friendship does not exist"});
+            }
+
+            // If the friendship exists, accept it
+            const sql = `UPDATE amicizia
+                         SET Stato = 1
+                         WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                            OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+            db.query(sql, [username1, username2, username2, username1], (err, result) => {
+                if (err) throw err;
+                res.json({message: "Friendship accepted"});
+            });
+        });
+    });
+});
+
+app.delete("/friendship/reject", (req, res) => {
+    const {username1, username2} = req.body;
+
+    // Check if both users exist
+    if (username1 === username2) {
+        return res.status(400).json({message: "The usernames cannot be the same"});
+    }
+
+    const checkUsersSql = `SELECT *
+                           FROM account
+                           WHERE Username IN (?, ?)`;
+    db.query(checkUsersSql, [username1, username2], (err, result) => {
+        if (err) throw err;
+
+        if (result.length < 2) {
+            return res.status(400).json({message: "One or both users do not exist"});
+        }
+
+        // Check if friendship already exists
+        const checkFriendshipSql = `SELECT *
+                                    FROM amicizia
+                                    WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                       OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+        db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+            if (err) throw err;
+
+            if (result.length === 0) {
+                return res.status(400).json({message: "Friendship does not exist"});
+            }
+
+            // If the friendship exists, reject it (delete the row)
+            const sql = `DELETE
+                         FROM amicizia
+                         WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                            OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+            db.query(sql, [username1, username2, username2, username1], (err, result) => {
+                if (err) throw err;
+                res.json({message: "Friendship rejected"});
             });
         });
     });

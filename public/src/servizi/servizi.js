@@ -138,3 +138,46 @@ export async function getChatParticipants(chatId) {
     return data;
 }
 
+/**
+ * Funzione per accettare una richiesta di amicizia.
+ * @param {string} username1 - Il primo nome utente.
+ * @param {string} username2 - Il secondo nome utente.
+ */
+export async function acceptFriendship(username1, username2) {
+    const response = await fetch("/friendship/accept", {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username1, username2}),
+    });
+    const data = await response.json();
+    console.log(data.message);
+    return data;
+}
+
+/**
+ * Funzione per recuperare tutte le richieste di amicizia non accettate.
+ * @param {string} username - Il nome dell'utente.
+ */
+export async function getUnacceptedFriendships(username) {
+    const response = await fetch(`/user/${username}/unaccepted-friendships`);
+    const data = await response.json();
+    console.log(`Richieste di amicizia non accettate per l'utente ${username}:`);
+    console.log(data);
+    return data;
+}
+
+/**
+ * Funzione per rifiutare un'amicizia.
+ * @param {string} username1 - Il primo nome utente.
+ * @param {string} username2 - Il secondo nome utente.
+ */
+export async function rejectFriendship(username1, username2) {
+    const response = await fetch("/friendship/reject", {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username1, username2}),
+    });
+    const data = await response.json();
+    console.log(data.message);
+    return data;
+}

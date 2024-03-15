@@ -1,5 +1,13 @@
 import {
-    getChatMessages, getUserChats, getUserFriends, createChat, addFriendship, addUsersToChat, getChatParticipants
+    getChatMessages,
+    getUserChats,
+    getUserFriends,
+    createChat,
+    addFriendship,
+    addUsersToChat,
+    getChatParticipants,
+    acceptFriendship,
+    rejectFriendship, getUnacceptedFriendships
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -18,6 +26,9 @@ const usernameFriend = document.getElementById("usernameFriend");
 const boxAmicizia = document.getElementById("checkBoxAmicizia");
 const inviaAmicizia = document.getElementById("inviaAmici");
 let chatSelezionata = "";
+const imgProfilo = document.getElementById("imgProfilo");
+const gestisciRichieste = document.getElementById("gestisciRichieste");
+const checkBoxRichieste = document.getElementById("checkBoxRichieste");
 const invita = document.getElementById("invitaInChat");
 let chats = [];
 let username = "";
@@ -112,6 +123,7 @@ form.addEventListener("submit", (e) => {
         const timestamp = new Date().toLocaleString("it-IT", {
             year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
         });
+        console.log(timestamp);
         socket.emit("chat message", room, {
             username, message: input.value, timestamp,
         }); // Invia l'username e il messaggio
@@ -126,12 +138,13 @@ let colorIndex = 0;
 
 function displayMessages(array) {
     const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
+    console.log(array);
     messages.innerHTML = array
         .map(({IdAutore, Testo, Data_invio, Ora_invio}) => {
             const user = chat ? chat.users.find(user => user.username === IdAutore) : null;
             const profileImage = user ? `data:image/jpeg;base64,${user.profileImage}` : "https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg";
             const align = IdAutore === username ? "me" : "others";
-
+            console.log(Testo, Data_invio, Ora_invio);
             // Assign a color to the user if they don't have one yet
             if (!userColors[IdAutore]) {
                 const randomIndex = Math.floor(Math.random() * pastelColors.length);
@@ -209,6 +222,7 @@ const handleClick = (i, array) => {
         }
     }
     document.getElementById(`chat_${array[i].IdChat}`).classList.add("active");
+    invita.removeAttribute("disabled");
     getChatMessages(room).then((array2) => {
         messageData = array2;
         displayMessages(messageData);
@@ -271,3 +285,60 @@ const renderChat = (array) => {
         buttonTmp.addEventListener("click", newClickHandler, false);
     }
 };
+
+
+const renderRichieste = (array) => {
+    console.log(array);
+    checkBoxRichieste.innerHTML = array
+        .map((user, index) => {
+            return `<div class="row mt-3 d-flex align-items-center">
+<div class="col-md-auto">
+<img src="data:image/jpeg;base64,${user.fotoProfilo}" alt="avatar"
+                             class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="50">
+</div>
+<div class="col-md-auto align-middle">
+<h3 class="align-middle">${user.username}</h3>
+</div>
+<div class="col-md-auto align-middle">
+<div class="row">
+<div class="col-md-auto">
+<button class="btn btn-primary align-middle btn-circle" id="accept_${index}"><span class="material-symbols-rounded align-middle">
+done
+</span></button>
+</div>
+<div class="col-md-auto align-middle">
+<button class="btn btn-info align-middle btn-circle" id="reject_${index}"><span class="material-symbols-rounded align-middle">
+close
+</span></button>
+</div>
+</div>
+</div>
+</div>`;
+        })
+        .join("");
+
+    array.forEach((user, index) => {
+        document.getElementById(`accept_${index}`).onclick = () => {
+            acceptFriendship(username, user.username).then(() => {
+                getUnacceptedFriendships(username).then((data) => {
+                    renderRichieste(data);
+                });
+            });
+        }
+
+        document.getElementById(`reject_${index}`).onclick = () => {
+            rejectFriendship(username, user.username).then(() => {
+                getUnacceptedFriendships(username).then((data) => {
+                    renderRichieste(data);
+                });
+            });
+        }
+    });
+}
+
+gestisciRichieste.onclick = () => {
+    getUnacceptedFriendships(username).then((data) => {
+        console.log(data);
+        renderRichieste(data);
+    });
+}

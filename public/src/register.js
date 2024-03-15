@@ -2,7 +2,7 @@ const username = document.getElementById("username");
 const password = document.getElementById("password");
 const confirmPassword = document.getElementById("confirmPassword");
 const email = document.getElementById("email");
-const button = document.getElementById("crea");
+const button = document.getElementById("registra");
 const errore = document.getElementById("errore");
 
 button.onclick = () => {

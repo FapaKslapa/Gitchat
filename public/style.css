@@ -90,10 +90,6 @@ h3 {
     font-size: 1.3em;
 }
 
-img {
-    max-width: 80%;
-}
-
 
 .btn-primary {
     background-color: #053DEB !important;
@@ -257,7 +253,7 @@ a.article:hover {
     position: relative;
 }
 
-.form-control {
+.message-input {
     padding-right: 5rem; /* Spazio per il bottone 'Send' */
     padding-left: 5rem; /* Spazio per il bottone 'File' */
 }
@@ -333,13 +329,13 @@ a.article:hover {
 ::-webkit-scrollbar {
     width: 1.2rem;
     border-radius: 1.25rem;
-    background-color: #333333;
+    background-color: #101415;
 }
 
 ::-webkit-scrollbar-track {
     border-radius: 1.25rem;
     border: 0.375rem solid transparent;
-    background-color: #333333;
+    background-color: #101415;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -354,4 +350,51 @@ a.article:hover {
     border-radius: 1.25rem;
     background-color: #D9D9D9;
     width: 1.5rem;
+}
+
+.btn-circle {
+    width: 2.5rem;
+    height: 2.5rem; /* 30px / 16 */
+    padding: 0.375rem 0rem; /* 6px / 16 */
+    border-radius: 1.5rem; /* 15px / 16 */
+    text-align: center;
+    font-size: 0.85rem; /* 12px / 16 */
+    line-height: 1.42857;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btn-circle-nav {
+    width: 3.5rem;
+    height: 3.5rem; /* 30px / 16 */
+    border-radius: 2.0rem; /* 15px / 16 */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    font-size: 3rem;
+    align-items: center;
+}
+
+.btn-circle-nav .material-symbols-rounded {
+    font-size: 2.0rem;
+}
+
+.btn-dark:disabled {
+    background-color: transparent !important; /* Rimuove lo sfondo */
+    border: none !important; /* Rimuove il bordo */
+}
+
+.form-ricerca {
+    width: 50%; /* Imposta la larghezza al 50% della larghezza del contenitore */
+    margin-left: auto; /* Aggiunge margine automatico a sinistra */
+    margin-right: auto;
+}
+
+.profile-image {
+    border-radius: 50%; /* Rende l'immagine circolare */
+    width: 3.125rem; /* Imposta la larghezza (50px / 16 = 3.125rem) */
+    height: 3.125rem; /* Imposta l'altezza (50px / 16 = 3.125rem) */
+    object-fit: cover; /* Fa sì che l'immagine riempia completamente l'elemento contenitore */
 }
