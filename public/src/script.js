@@ -7,7 +7,8 @@ import {
     addUsersToChat,
     getChatParticipants,
     acceptFriendship,
-    rejectFriendship, getUnacceptedFriendships
+    rejectFriendship,
+    getUnacceptedFriendships
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -30,13 +31,14 @@ const imgProfilo = document.getElementById("imgProfilo");
 const gestisciRichieste = document.getElementById("gestisciRichieste");
 const checkBoxRichieste = document.getElementById("checkBoxRichieste");
 const invita = document.getElementById("invitaInChat");
+const checkBoxChat = document.getElementById("checkBoxChat");
+const newChatButton = document.getElementById("newChatButton");
 let chats = [];
+let mieChat = [];
+const eventHandlers = {};
 let username = "";
 let password = "";
-const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E",
-    "#F63E02", "#46237A", "#256EFF", "#FF495C",
-    "#FEE440", "#00BBF9", "#00F5D4", "#72B01D",
-    "#3F7D20", "#348AA7", "#440D0F"];
+const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E", "#F63E02", "#46237A", "#256EFF", "#FF495C", "#FEE440", "#00BBF9", "#00F5D4", "#72B01D", "#3F7D20", "#348AA7", "#440D0F"];
 
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
@@ -73,31 +75,53 @@ const templateMessageAltro = `
     <img src="%SRC" alt="avatar"
          class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
 </li>`;
+const handleClick = (i, array) => {
+    socket.emit("leaveRoom", room, username);
+    messageData = [];
+    console.log("Click");
+    room = array[i].IdChat;
+    socket.emit('join room', array[i].IdChat);
+    chatSelezionata = array[i].NomeChat;
+    for (let j = 0; j < array.length; j++) {
+        if (array[j].IdChat !== array[i].IdChat) {
+            document.getElementById(`chat_${array[j].IdChat}`).classList.remove("active");
+            document.getElementById(`chat_${array[j].IdChat}`).classList.remove("disabled");
+        }
+    }
+    document.getElementById(`chat_${array[i].IdChat}`).classList.add("active");
+    if (array[i].proprietario !== username)
+        invita.removeAttribute("disabled");
+    getChatMessages(room).then((array2) => {
+        messageData = array2;
+        displayMessages(messageData);
+        renderChat(array);
+    });
+};
+const renderChat = (array) => {
+    for (let i = 0; i < array.length; i++) {
+        const buttonTmp = document.getElementById(`chat_${array[i].IdChat}`);
+
+        // Se esistono vecchi gestori di eventi, rimuovili
+        if (eventHandlers[`chat_${array[i].IdChat}`]) {
+            buttonTmp.removeEventListener("click", eventHandlers[`chat_${array[i].IdChat}`]);
+        }
+        // Crea nuovi gestori di eventi
+        const newClickHandler = () => handleClick(i, array);
+        // Memorizza i nuovi gestori di eventi
+        eventHandlers[`chat_${array[i].IdChat}`] = newClickHandler;
+        // Aggiungi i nuovi gestori di eventi
+        buttonTmp.addEventListener("click", newClickHandler, false);
+    }
+};
+
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "/accedi.html";
 } else {
     username = sessionStorage.getItem("username");
     password = sessionStorage.getItem("password");
-    getUserChats(username).then((data) => {
-        console.log(data);
-        //displayMessages(data);
-    });
-}
-
-newFriend.onclick = () => {
-    console.log(username, usernameFriend.value);
-    addFriendship(username, usernameFriend.value).then((data) => {
-        console.log(data);
-    });
-}
-newChat.onclick = () => {
-    createChat(nomeChat.value, [username]).then((data) => {
-        console.log(data);
-    });
-}
-getUserChats(username).then((data) => {
-    chats = data;
-    listChat.innerHTML = data
+    chats = await getUserChats(username);
+    mieChat = chats.filter(chat => chat.proprietario === username);
+    listChat.innerHTML = chats
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
             return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
@@ -105,10 +129,21 @@ getUserChats(username).then((data) => {
                     </li>`;
         })
         .join("");
-    renderChat(data);
-});
+    renderChat(chats);
+}
 
-
+newFriend.onclick = async () => {
+    console.log(username, usernameFriend.value);
+    await addFriendship(username, usernameFriend.value)
+}
+newChat.onclick = async () => {
+    const data = getSelectedFriends();
+    await createChat(nomeChat.value, data, username);
+}
+newChatButton.onclick = async () => {
+    const data = await getUserFriends(username);
+    renderInvitoChat(data);
+}
 socket.on("chat message", (message) => {
     console.log(message)
     messageData.push(message); // Aggiungi il messaggio all'array
@@ -141,8 +176,15 @@ function displayMessages(array) {
     console.log(array);
     messages.innerHTML = array
         .map(({IdAutore, Testo, Data_invio, Ora_invio}) => {
-            const user = chat ? chat.users.find(user => user.username === IdAutore) : null;
-            const profileImage = user ? `data:image/jpeg;base64,${user.profileImage}` : "https://mdbootstrap.com/img/Photos/Avatars/img%20(31).jpg";
+            let user = chat ? chat.users.find(user => user.username === IdAutore) : null;
+            // Se l'utente non viene trovato, utilizza un profilo fittizio
+            if (!user) {
+                user = {
+                    username: 'Utente Eliminato',
+                    profileImage: './images/default.jpg'
+                };
+            }
+            const profileImage = user.profileImage.startsWith('./') ? user.profileImage : `data:image/jpeg;base64,${user.profileImage}`;
             const align = IdAutore === username ? "me" : "others";
             console.log(Testo, Data_invio, Ora_invio);
             // Assign a color to the user if they don't have one yet
@@ -167,10 +209,14 @@ function displayMessages(array) {
             const formattedTime = date.toLocaleTimeString("it-IT", {
                 hour: "2-digit", minute: "2-digit"
             });
+
+            // Se l'utente è stato eliminato, il nome viene mostrato in italico
+            const usernameDisplay = user.username === 'Utente Eliminato' ? `<em>${IdAutore}</em>` : IdAutore;
+
             if (align === "me") {
-                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
+                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
             } else {
-                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${IdAutore}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
+                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
             }
         })
         .join("");
@@ -180,13 +226,6 @@ function displayMessages(array) {
     }
 }
 
-/*
-socket.emit("leaveRoom", room, username);
-messageData = [];
-roomInput.value = "";
-room = "";
-messages.innerHTML = "";
-*/
 const renderInvito = (array, partecipanti) => {
     console.log(array);
     console.log(partecipanti);
@@ -209,27 +248,41 @@ const renderInvito = (array, partecipanti) => {
         })
         .join("");
 }
-// Definisci le funzioni di gestione degli eventi fuori dal ciclo for
-const handleClick = (i, array) => {
-    console.log("Click");
-    room = array[i].IdChat;
-    socket.emit('join room', array[i].IdChat);
-    chatSelezionata = array[i].NomeChat;
-    for (let j = 0; j < array.length; j++) {
-        if (array[j].IdChat !== array[i].IdChat) {
-            document.getElementById(`chat_${array[j].IdChat}`).classList.remove("active");
-            document.getElementById(`chat_${array[j].IdChat}`).classList.remove("disabled");
+const renderInvitoChat = (friends) => {
+    checkBoxChat.innerHTML = friends
+        .map((friend) => {
+            return `<div class="row mt-3 d-flex align-items-center">
+<div class="col-md-auto">
+<img src="data:image/jpeg;base64,${friend.fotoProfilo}" alt="avatar"
+                             class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="50">
+</div>
+<div class="col-md-auto align-middle">
+<h3 class="align-middle">${friend.username}</h3>
+</div>
+<div class="col-md-auto align-middle">
+<input type="checkbox" class="btn-check" id="invitaChat_${friend.username}" value="${friend.username}" autocomplete="off">
+<label class="btn btn-outline-primary" for="invitaChat_${friend.username}">Seleziona</label>
+</div>
+</div>`;
+        })
+        .join("");
+}
+
+const getSelectedFriends = () => {
+    // Get all checkboxes
+    const checkboxes = document.querySelectorAll('.btn-check');
+    let selectedFriends = [];
+
+    // Loop through each checkbox
+    for (let i = 0; i < checkboxes.length; i++) {
+        // If the checkbox is checked and its id starts with 'invitaChat_', add its value to the array
+        if (checkboxes[i].checked && checkboxes[i].id.startsWith('invitaChat_')) {
+            selectedFriends.push(checkboxes[i].value);
         }
     }
-    document.getElementById(`chat_${array[i].IdChat}`).classList.add("active");
-    invita.removeAttribute("disabled");
-    getChatMessages(room).then((array2) => {
-        messageData = array2;
-        displayMessages(messageData);
-        renderChat(array);
-    });
-};
 
+    return selectedFriends;
+}
 
 invita.onclick = () => {
     getUserFriends(username).then((data) => {
@@ -264,27 +317,6 @@ inviaAmicizia.onclick = () => {
     });
 }
 // Crea un oggetto per memorizzare le funzioni di gestione degli eventi
-const eventHandlers = {};
-
-const renderChat = (array) => {
-    for (let i = 0; i < array.length; i++) {
-        const buttonTmp = document.getElementById(`chat_${array[i].IdChat}`);
-
-        // Se esistono vecchi gestori di eventi, rimuovili
-        if (eventHandlers[`chat_${array[i].IdChat}`]) {
-            buttonTmp.removeEventListener("click", eventHandlers[`chat_${array[i].IdChat}`]);
-        }
-
-        // Crea nuovi gestori di eventi
-        const newClickHandler = () => handleClick(i, array);
-
-        // Memorizza i nuovi gestori di eventi
-        eventHandlers[`chat_${array[i].IdChat}`] = newClickHandler;
-
-        // Aggiungi i nuovi gestori di eventi
-        buttonTmp.addEventListener("click", newClickHandler, false);
-    }
-};
 
 
 const renderRichieste = (array) => {
@@ -342,3 +374,4 @@ gestisciRichieste.onclick = () => {
         renderRichieste(data);
     });
 }
+
