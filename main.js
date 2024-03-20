@@ -196,7 +196,7 @@ app.get("/chat/:id/participants", (req, res) => {
 
         // Converti le immagini in base64
         result.forEach((user, index) => {
-            let imagePath = `./images/${user.ImmagineProfilo}`; // Modifica questo percorso con il percorso corretto delle tue immagini
+            let imagePath = `./images/${user.ImmagineProfilo}`;
             result[index].ImmagineProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
         });
 
@@ -216,13 +216,15 @@ app.post("/user", (req, res) => {
 
 
 app.post("/chat", (req, res) => {
-    const {users, nomeChat} = req.body;
+    const {users, nomeChat, proprietario} = req.body;
     const DataCreazione = new Date();
     const chatId = uuidv4(undefined, undefined, undefined);
-    const sqlChat = `INSERT INTO chat (Id, DataCreazione, NomeChat)
-                     VALUES (?, ?, ?)`;
-    db.query(sqlChat, [chatId, DataCreazione, nomeChat], (err, result) => {
+    const sqlChat = `INSERT INTO chat (Id, DataCreazione, NomeChat, Proprietario)
+                     VALUES (?, ?, ?, ?)`;
+    db.query(sqlChat, [chatId, DataCreazione, nomeChat, proprietario], (err, result) => {
         if (err) throw err;
+        // Aggiungi il proprietario all'array degli utenti
+        users.push(proprietario);
         users.forEach((user) => {
             const sqlPartecipazione = `INSERT INTO partecipazione (IdChat, IdAccount)
                                        VALUES (?, ?)`;
@@ -522,5 +524,16 @@ app.delete("/friendship/reject", (req, res) => {
                 res.json({message: "Friendship rejected"});
             });
         });
+    });
+});
+
+app.get("/user/:username/owned-chats", (req, res) => {
+    const username = req.params.username;
+    const sql = `SELECT *
+                 FROM chat
+                 WHERE Proprietario = ?`;
+    db.query(sql, [username], (err, result) => {
+        if (err) res.json({message: "Errore"});
+        res.json(result);
     });
 });

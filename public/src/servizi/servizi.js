@@ -35,10 +35,11 @@ export async function getUserFriends(username) {
  * Funzione per creare una chat.
  * @param {Object} chat - L'oggetto chat.
  */
-export async function createChat(nomeChat, users) {
+export async function createChat(nomeChat, users, proprietario) {
     const chat = {
         nomeChat: nomeChat,
-        users: users
+        users: users,
+        proprietario: proprietario
     }
     const response = await fetch("/chat", {
         method: "POST",
@@ -179,5 +180,17 @@ export async function rejectFriendship(username1, username2) {
     });
     const data = await response.json();
     console.log(data.message);
+    return data;
+}
+
+/**
+ * Function to get all chats owned by a user.
+ * @param {string} username - The username of the user.
+ */
+export async function getUserOwnedChats(username) {
+    const response = await fetch(`/user/${username}/owned-chats`);
+    const data = await response.json();
+    console.log(`Chats owned by the user ${username}:`);
+    console.log(data);
     return data;
 }

@@ -66,6 +66,10 @@ close
                                 </div>
                             </div>
                         </div>
+                        <div class="row mt-3">
+                            <div id="checkBoxChat">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0">
@@ -221,12 +225,17 @@ close
     <div class="row justify-content-start">
         <div class="col-md-3">
             <div id="sidebar" class="col-auto">
-                <div class="row mt-2 sidebar-header">
-
-                    <input class="form-control me-2 form-ricerca align-self-center border-0"
-                           type="search"
-                           placeholder="Search" aria-label="Search">
-                    <img src="./images/Default.jpg" class="profile-image mx-0" alt="Profilo" id="imgProfilo">
+                <div class="row mt-2 sidebar-header justify-content-end align-items-center">
+                    <div class="col">
+                        <input class="form-control align-self-center border-0"
+                               type="search"
+                               placeholder="Search" aria-label="Search">
+                    </div>
+                    <div class="col-auto">
+                        <img src="./images/Default.jpg" alt="avatar"
+                             class="rounded-circle d-flex align-self-start shadow-1-strong border border-2 border-light"
+                             width="50">
+                    </div>
                 </div>
                 <div class="row mt-5">
                     <ul class="list-unstyled components" id="listChat">
@@ -236,7 +245,7 @@ close
                 <div class="row justify-content-between footer-sidebar">
                     <div class="col-auto">
                         <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                                data-bs-target="#modalNuovaChat">
+                                data-bs-target="#modalNuovaChat" id="newChatButton">
             <span class="material-symbols-rounded align-middle">
                 add
             </span>

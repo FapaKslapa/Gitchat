@@ -355,7 +355,7 @@ a.article:hover {
 .btn-circle {
     width: 2.5rem;
     height: 2.5rem; /* 30px / 16 */
-    padding: 0.375rem 0rem; /* 6px / 16 */
+    padding: 0.375rem 0; /* 6px / 16 */
     border-radius: 1.5rem; /* 15px / 16 */
     text-align: center;
     font-size: 0.85rem; /* 12px / 16 */
@@ -393,8 +393,4 @@ a.article:hover {
 }
 
 .profile-image {
-    border-radius: 50%; /* Rende l'immagine circolare */
-    width: 3.125rem; /* Imposta la larghezza (50px / 16 = 3.125rem) */
-    height: 3.125rem; /* Imposta l'altezza (50px / 16 = 3.125rem) */
-    object-fit: cover; /* Fa sì che l'immagine riempia completamente l'elemento contenitore */
 }
