@@ -375,3 +375,13 @@ gestisciRichieste.onclick = () => {
     });
 }
 
+document.getElementById('messaggio').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && event.shiftKey) {
+        // Se sia Shift che Enter sono premuti, permetti l'azione predefinita (andare a capo)
+        return;
+    } else if (event.key === 'Enter') {
+        // Se solo Enter è premuto, previeni l'azione predefinita e simula un click sul bottone "invia"
+        event.preventDefault();
+        document.getElementById('invia').click();
+    }
+});
