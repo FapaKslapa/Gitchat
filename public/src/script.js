@@ -237,7 +237,10 @@ function displayMessages(array) {
                     return tmp.replace("%NOMEFILE", Path.split("_")[1]).replace("%VALUEFILE", Path).replace("%IDFILE", Path);
                 } else return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`).replace("%FILE", "");
             } else {
-                return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
+                if (Path !== null) {
+                    const tmp = templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`).replace("%FILE", templateFile);
+                    return tmp.replace("%NOMEFILE", Path.split("_")[1]).replace("%VALUEFILE", Path).replace("%IDFILE", Path);
+                } else return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`).replace("%FILE", "");
             }
         })
         .join("");
