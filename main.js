@@ -4,6 +4,9 @@ const dbConfig = require("./asset/conf.json");
 // Crea una connessione al database
 const db = mysql.createConnection(dbConfig);
 const http = require("http");
+const mkdirp = require('mkdirp');
+const path = require('path');
+
 // Express
 const express = require("express");
 const app = express();
@@ -51,13 +54,40 @@ io.on("connection", (socket) => {
         let dateObject = new Date(`${year}-${month}-${day}T${time}`);
         let isoString = dateObject.toISOString();
         console.log(isoString, time);
-        io.to(room).emit("chat message", {IdAutore: username, Testo: message, Data_invio: isoString, Ora_invio: time}); // Trasmetti l'username e il messaggio
+        io.to(room).emit("chat message", {
+            IdAutore: username, Testo: message, Data_invio: isoString, Ora_invio: time, Path: null
+        }); // Trasmetti l'username e il messaggio
         // Aggiungi il messaggio all'array temporaneo
         if (!temporaryMessages[room]) {
             temporaryMessages[room] = [];
         }
-        temporaryMessages[room].push({username, message, timestamp});
+        temporaryMessages[room].push({username, message, timestamp, FileName: null});
         console.log(chats);
+    });
+
+    socket.on('file', (room, {username, message, timestamp, file, fileName}) => {
+        const roomDir = path.join('uploads', room);
+        mkdirp.sync(roomDir); // Ensure the directory exists
+        const uniqueName = `${uuidv4(undefined, undefined, undefined)}_${fileName}`;
+        const filePath = path.join(roomDir, uniqueName);
+        fs.writeFile(filePath, Buffer.from(file), (err) => {
+            if (err) throw err;
+            console.log('file salvato');
+        });
+
+        const [date, time] = timestamp.split(", ");
+        let [day, month, year] = date.split("/");
+        year = "20" + year; // Add the century to the year
+        let dateObject = new Date(`${year}-${month}-${day}T${time}`);
+        let isoString = dateObject.toISOString();
+        console.log(message);
+        io.to(room).emit("chat message", {
+            IdAutore: username, Testo: message, Data_invio: isoString, Ora_invio: time, Path: uniqueName
+        }); // Trasmetti l'username e il messaggio
+        if (!temporaryMessages[room]) {
+            temporaryMessages[room] = [];
+        }
+        temporaryMessages[room].push({username, message, FileName: filePath, timestamp});
     });
 
     socket.on("leaveRoom", (room, username) => {
@@ -65,11 +95,11 @@ io.on("connection", (socket) => {
         console.log(`User ${username} left room: ${room}`);
         saveMessagesToDatabase(room);
     });
-    socket.on("disconnect", (data) => {
+    socket.on("disconnect", () => {
         console.log("user disconnected");
     });
 
-    socket.on("message", (data) => {
+    socket.on("message", () => {
     });
 });
 
@@ -99,8 +129,8 @@ const saveMessagesToDatabase = (room) => {
     if (messages && messages.length > 0) {
         let messageId = 0;
         // Connect to the database and save the messages
-        messages.forEach(({username, message, timestamp}) => {
-            messageId = uuidv4();
+        messages.forEach(({username, message, timestamp, FileName}) => {
+            messageId = uuidv4(undefined, undefined, undefined);
             let [date, time] = timestamp.split(", ");
             let [day, month, year] = date.split("/");
             year = "20" + year; // Add the century to the year
@@ -109,9 +139,12 @@ const saveMessagesToDatabase = (room) => {
             let sqlDate = dateObject.toISOString().split('T')[0]; // Get the date part in 'YYYY-MM-DD' format
             let sqlTime = dateObject.toTimeString().split(' ')[0]; // Get the time part in 'HH:MM:SS' format
             console.log(sqlDate, sqlTime);
-            const sqlMessage = `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
-                                VALUES (?, ?, ?, ?, ?, ?)`;
-            db.query(sqlMessage, [messageId, message, sqlDate, sqlTime, username, room], (err, result) => {
+            const sqlMessage = FileName ? `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat, Path)
+                                           VALUES (?, ?, ?, ?, ?, ?,
+                                                   ?)` : `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
+                                                          VALUES (?, ?, ?, ?, ?, ?)`;
+            const params = FileName ? [messageId, message, sqlDate, sqlTime, username, room, FileName] : [messageId, message, sqlDate, sqlTime, username, room];
+            db.query(sqlMessage, params, (err) => {
                 if (err) throw err;
             });
         });
@@ -119,8 +152,7 @@ const saveMessagesToDatabase = (room) => {
         // Clear the temporary messages for this chat
         temporaryMessages[room] = [];
     }
-}
-
+};
 
 app.get("/user/:username/chats", (req, res) => {
     const username = req.params.username;
@@ -147,8 +179,7 @@ app.get("/user/:username/chats", (req, res) => {
                     let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
 
                     return {
-                        username: user.Username,
-                        profileImage: imageAsBase64
+                        username: user.Username, profileImage: imageAsBase64
                     };
                 });
                 completedQueries++;
@@ -208,7 +239,7 @@ app.post("/user", (req, res) => {
     const {Username, Mail, Password, ImmagineProfilo, Token} = req.body;
     const sql = `INSERT INTO account (Username, Mail, Password, ImmagineProfilo, Token)
                  VALUES (?, ?, ?, ?, ?)`;
-    db.query(sql, [Username, Mail, Password, ImmagineProfilo, Token], (err, result) => {
+    db.query(sql, [Username, Mail, Password, ImmagineProfilo, Token], (err) => {
         if (err) throw err;
         res.json({message: "Utente creato con successo"});
     });
@@ -221,14 +252,14 @@ app.post("/chat", (req, res) => {
     const chatId = uuidv4(undefined, undefined, undefined);
     const sqlChat = `INSERT INTO chat (Id, DataCreazione, NomeChat, Proprietario)
                      VALUES (?, ?, ?, ?)`;
-    db.query(sqlChat, [chatId, DataCreazione, nomeChat, proprietario], (err, result) => {
+    db.query(sqlChat, [chatId, DataCreazione, nomeChat, proprietario], (err) => {
         if (err) throw err;
         // Aggiungi il proprietario all'array degli utenti
         users.push(proprietario);
         users.forEach((user) => {
             const sqlPartecipazione = `INSERT INTO partecipazione (IdChat, IdAccount)
                                        VALUES (?, ?)`;
-            db.query(sqlPartecipazione, [chatId, user], (err, result) => {
+            db.query(sqlPartecipazione, [chatId, user], (err) => {
                 if (err) throw err;
             });
         });
@@ -245,14 +276,14 @@ app.post("/chat/:id/users", (req, res) => {
     const sqlDelete = `DELETE
                        FROM partecipazione
                        WHERE IdChat = ?`;
-    db.query(sqlDelete, [chatId], (err, result) => {
+    db.query(sqlDelete, [chatId], (err) => {
         if (err) throw err;
 
         // Aggiungi nuovi partecipanti alla chat
         users.forEach((user) => {
             const sqlInsert = `INSERT INTO partecipazione (IdChat, IdAccount)
                                VALUES (?, ?)`;
-            db.query(sqlInsert, [chatId, user], (err, result) => {
+            db.query(sqlInsert, [chatId, user], (err) => {
                 if (err) throw err;
             });
         });
@@ -267,7 +298,7 @@ app.post("/chat/:id/user", (req, res) => {
 
     const sqlInsert = `INSERT INTO partecipazione (IdChat, IdAccount)
                        VALUES (?, ?)`;
-    db.query(sqlInsert, [chatId, username], (err, result) => {
+    db.query(sqlInsert, [chatId, username], (err) => {
         if (err) throw err;
         res.json({message: "Utente aggiunto alla chat con successo"});
     });
@@ -281,7 +312,7 @@ app.delete("/deleteChat/:id/user", (req, res) => {
                        FROM partecipazione
                        WHERE IdChat = ?
                          AND IdAccount = ?`;
-    db.query(sqlDelete, [chatId, username], (err, result) => {
+    db.query(sqlDelete, [chatId, username], (err) => {
         if (err) throw err;
         res.json({message: "Utente rimosso dalla chat con successo"});
     });
@@ -292,7 +323,7 @@ app.post("/message", (req, res) => {
     const sql = `INSERT INTO messaggio (Id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
                  VALUES (?, ?, ?, ?, ?, ?, ?)`;
     const id = uuidv4(undefined, undefined, undefined);
-    db.query(sql, [id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat], (err, result) => {
+    db.query(sql, [id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat], (err) => {
         if (err) throw err;
         res.json({message: "Messaggio creato con successo"});
     });
@@ -329,7 +360,7 @@ app.post("/friendship", (req, res) => {
             // Insert friendship
             const sql = `INSERT INTO amicizia (IdAccount1, IdAccount2)
                          VALUES (?, ?)`;
-            db.query(sql, [username1, username2], (err, result) => {
+            db.query(sql, [username1, username2], (err) => {
                 if (err) throw err;
                 res.json({message: "Amicizia aggiunta con successo"});
             });
@@ -344,7 +375,7 @@ app.put("/message/:id", (req, res) => {
     const sql = `UPDATE messaggio
                  SET Testo = ?
                  WHERE Id = ?`;
-    db.query(sql, [newText, messageId], (err, result) => {
+    db.query(sql, [newText, messageId], (err) => {
         if (err) throw err;
         res.json({message: "Messaggio modificato con successo"});
     });
@@ -356,7 +387,7 @@ app.delete("/message/:id", (req, res) => {
     const sql = `DELETE
                  FROM messaggio
                  WHERE Id = ?`;
-    db.query(sql, [messageId], (err, result) => {
+    db.query(sql, [messageId], (err) => {
         if (err) throw err;
         res.json({message: "Messaggio eliminato con successo"});
     });
@@ -412,7 +443,7 @@ app.post("/register", (req, res) => {
             // If the email is unique, proceed with the registration
             const sql = `INSERT INTO account (Mail, Username, Password)
                          VALUES (?, ?, ?)`;
-            db.query(sql, [mail, username, password], (err, result) => {
+            db.query(sql, [mail, username, password], (err) => {
                 if (err) return res.status(500).json({message: "An error occurred during registration"});
 
                 res.json({message: "Registration successful"});
@@ -476,7 +507,7 @@ app.put("/friendship/accept", (req, res) => {
                          SET Stato = 1
                          WHERE (IdAccount1 = ? AND IdAccount2 = ?)
                             OR (IdAccount1 = ? AND IdAccount2 = ?)`;
-            db.query(sql, [username1, username2, username2, username1], (err, result) => {
+            db.query(sql, [username1, username2, username2, username1], (err) => {
                 if (err) throw err;
                 res.json({message: "Friendship accepted"});
             });
@@ -519,7 +550,7 @@ app.delete("/friendship/reject", (req, res) => {
                          FROM amicizia
                          WHERE (IdAccount1 = ? AND IdAccount2 = ?)
                             OR (IdAccount1 = ? AND IdAccount2 = ?)`;
-            db.query(sql, [username1, username2, username2, username1], (err, result) => {
+            db.query(sql, [username1, username2, username2, username1], (err) => {
                 if (err) throw err;
                 res.json({message: "Friendship rejected"});
             });
@@ -535,5 +566,20 @@ app.get("/user/:username/owned-chats", (req, res) => {
     db.query(sql, [username], (err, result) => {
         if (err) res.json({message: "Errore"});
         res.json(result);
+    });
+});
+
+app.get('/download/:room/:filename', (req, res) => {
+    const room = req.params.room;
+    const filename = req.params.filename;
+    const filePath = path.join('uploads', room, filename);
+
+    res.download(filePath, filename, (err) => {
+        if (err) {
+            console.log(err);
+            res.status(500).send({
+                message: "Could not download the file. " + err,
+            });
+        }
     });
 });

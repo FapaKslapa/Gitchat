@@ -302,6 +302,11 @@ a.article:hover {
     border-radius: 0.625rem;
 }
 
+.card-file {
+    background: #D9D9D9;
+    color: #101415;
+}
+
 /* Nascondi la barra di scorrimento per le finestre del browser più larghe */
 @media (min-width: 800px) {
     body::-webkit-scrollbar {

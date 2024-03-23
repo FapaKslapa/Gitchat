@@ -1,24 +1,22 @@
 import {
-    getChatMessages,
-    getUserChats,
-    getUserFriends,
-    createChat,
+    acceptFriendship,
     addFriendship,
     addUsersToChat,
+    createChat,
+    getChatMessages,
     getChatParticipants,
-    acceptFriendship,
+    getUnacceptedFriendships,
+    getUserChats,
+    getUserFriends,
     rejectFriendship,
-    getUnacceptedFriendships
+    downloadFile
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
+const fileInput = document.getElementById("file-input");
 const form = document.getElementById("form");
 const input = document.getElementById("messaggio");
-const roomInput = document.getElementById("room");
-const usernameInput = document.getElementById("username"); // Aggiungi un campo di input per l'username
 const messages = document.getElementById("messages");
-const invia = document.getElementById("invia");
-const buttonChat = document.getElementById("chats");
 const listChat = document.getElementById("listChat");
 const newChat = document.getElementById("newChat");
 const nomeChat = document.getElementById("nomeChat");
@@ -26,38 +24,52 @@ const newFriend = document.getElementById("newFriend");
 const usernameFriend = document.getElementById("usernameFriend");
 const boxAmicizia = document.getElementById("checkBoxAmicizia");
 const inviaAmicizia = document.getElementById("inviaAmici");
-let chatSelezionata = "";
 const imgProfilo = document.getElementById("imgProfilo");
 const gestisciRichieste = document.getElementById("gestisciRichieste");
 const checkBoxRichieste = document.getElementById("checkBoxRichieste");
 const invita = document.getElementById("invitaInChat");
 const checkBoxChat = document.getElementById("checkBoxChat");
 const newChatButton = document.getElementById("newChatButton");
+const eventHandlers = {};
+let chatSelezionata = "";
 let chats = [];
 let mieChat = [];
-const eventHandlers = {};
 let username = "";
 let password = "";
 const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E", "#F63E02", "#46237A", "#256EFF", "#FF495C", "#FEE440", "#00BBF9", "#00F5D4", "#72B01D", "#3F7D20", "#348AA7", "#440D0F"];
 
+const templateFile = `<div class="card card-file">
+    <div class="card-body">
+        <div class="row justify-content-end align-middle">
+            <div class="col align-middle">
+                %NOMEFILE
+            </div>
+            <div class="col-auto align-middle">
+                <button type="button" class="btn btn-info align-middle btn-sm" id="%IDFILE" value="%VALUEFILE"><span
+                    class="material-symbols-rounded align-middle">
+download
+</span></button>
+            </div>
+        </div>
+    </div>
+</div>`
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
     <img src="%SRC" alt="avatar"
          class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60" style="margin-right: 10px;">
     <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
-        <div class="card-header d-flex justify-content-between p-3 align-items-center"
-             style="border-bottom: 1px solid rgba(255,255,255,.3);">
+        <div class="card-header d-flex justify-content-between align-items-center"
             <p class="fw-bold mb-0" style="margin-right: 10px;">%USERNAME</p>
             <p class=" small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
         </div>
         <div class="card-body">
+        %FILE
             <p class="mb-0">
                 %TESTO
             </p>
         </div>
     </div>
 </li>`;
-
 const templateMessageAltro = `
 <li class="d-flex justify-content-end mb-4">
     <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
@@ -67,6 +79,7 @@ const templateMessageAltro = `
             <p class="small mb-0"><i class="far fa-clock"></i> %TEMPO</p>
         </div>
         <div class="card-body">
+        %FILE
             <p class="mb-0">
                 %TESTO
             </p>
@@ -75,10 +88,9 @@ const templateMessageAltro = `
     <img src="%SRC" alt="avatar"
          class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
 </li>`;
-const handleClick = (i, array) => {
+const handleClick = async (i, array) => {
     socket.emit("leaveRoom", room, username);
     messageData = [];
-    console.log("Click");
     room = array[i].IdChat;
     socket.emit('join room', array[i].IdChat);
     chatSelezionata = array[i].NomeChat;
@@ -89,13 +101,10 @@ const handleClick = (i, array) => {
         }
     }
     document.getElementById(`chat_${array[i].IdChat}`).classList.add("active");
-    if (array[i].proprietario !== username)
-        invita.removeAttribute("disabled");
-    getChatMessages(room).then((array2) => {
-        messageData = array2;
-        displayMessages(messageData);
-        renderChat(array);
-    });
+    if (array[i].proprietario !== username) invita.removeAttribute("disabled");
+    messageData = await getChatMessages(room)
+    displayMessages(messageData);
+    renderChat(array);
 };
 const renderChat = (array) => {
     for (let i = 0; i < array.length; i++) {
@@ -133,7 +142,6 @@ if (sessionStorage.getItem("username") === null || sessionStorage.getItem("passw
 }
 
 newFriend.onclick = async () => {
-    console.log(username, usernameFriend.value);
     await addFriendship(username, usernameFriend.value)
 }
 newChat.onclick = async () => {
@@ -145,48 +153,60 @@ newChatButton.onclick = async () => {
     renderInvitoChat(data);
 }
 socket.on("chat message", (message) => {
-    console.log(message)
+    console.log("Entrato");
     messageData.push(message); // Aggiungi il messaggio all'array
+    console.log(message);
     displayMessages(messageData); // Visualizza i messaggi
 });
-
 
 let room = "";
 form.addEventListener("submit", (e) => {
     e.preventDefault();
+    const timestamp = new Date().toLocaleString("it-IT", {
+        year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+    });
     if (input.value) {
-        const timestamp = new Date().toLocaleString("it-IT", {
-            year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
-        });
-        console.log(timestamp);
-        socket.emit("chat message", room, {
-            username, message: input.value, timestamp,
-        }); // Invia l'username e il messaggio
-        input.value = "";
+        if (fileInput.files.length > 0) {
+            console.log(input.value);
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const blob = new Blob([event.target.result], {type: file.type});
+
+                socket.emit("file", room, {
+                    username, message: input.value, timestamp, file: blob, fileName: file.name
+                });
+                console.log('file inviato');
+                input.value = "";
+                fileInput.value = "";
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            socket.emit("chat message", room, {
+                username, message: input.value, timestamp,
+            });
+            input.value = "";
+            fileInput.value = "";
+        }
     }
 });
-
 let messageData = []; // Array per salvare i dati dei messaggi
 
 let userColors = {};
-let colorIndex = 0;
 
 function displayMessages(array) {
     const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
-    console.log(array);
     messages.innerHTML = array
-        .map(({IdAutore, Testo, Data_invio, Ora_invio}) => {
+        .map(({IdAutore, Testo, Data_invio, Ora_invio, Path}) => {
             let user = chat ? chat.users.find(user => user.username === IdAutore) : null;
             // Se l'utente non viene trovato, utilizza un profilo fittizio
             if (!user) {
                 user = {
-                    username: 'Utente Eliminato',
-                    profileImage: './images/default.jpg'
+                    username: 'Utente Eliminato', profileImage: './images/default.jpg'
                 };
             }
             const profileImage = user.profileImage.startsWith('./') ? user.profileImage : `data:image/jpeg;base64,${user.profileImage}`;
             const align = IdAutore === username ? "me" : "others";
-            console.log(Testo, Data_invio, Ora_invio);
             // Assign a color to the user if they don't have one yet
             if (!userColors[IdAutore]) {
                 const randomIndex = Math.floor(Math.random() * pastelColors.length);
@@ -198,10 +218,8 @@ function displayMessages(array) {
             // Dividi la stringa di data e ora in due parti
             const dataParts = Data_invio.split("T");
             const datePart = dataParts[0];
-            const timePart = Ora_invio;
-
             // Crea un nuovo oggetto Date utilizzando le due parti
-            const date = new Date(`${datePart}T${timePart}`);
+            const date = new Date(`${datePart}T${Ora_invio}`);
 
             const formattedDate = date.toLocaleDateString("it-IT", {
                 year: "2-digit", month: "2-digit", day: "2-digit"
@@ -212,9 +230,12 @@ function displayMessages(array) {
 
             // Se l'utente è stato eliminato, il nome viene mostrato in italico
             const usernameDisplay = user.username === 'Utente Eliminato' ? `<em>${IdAutore}</em>` : IdAutore;
-
+            console.log(Testo)
             if (align === "me") {
-                return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
+                if (Path !== null) {
+                    const tmp = templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`).replace("%FILE", templateFile);
+                    return tmp.replace("%NOMEFILE", Path.split("_")[1]).replace("%VALUEFILE", Path).replace("%IDFILE", Path);
+                } else return templateMessageMio.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`).replace("%FILE", "");
             } else {
                 return templateMessageAltro.replace("%SRC", profileImage).replace("%TESTO", Testo).replace("%USERNAME", `<span style="color: ${userColor};">${usernameDisplay}</span>`).replace("%TEMPO", `${formattedDate} ${formattedTime}`)
             }
@@ -227,8 +248,6 @@ function displayMessages(array) {
 }
 
 const renderInvito = (array, partecipanti) => {
-    console.log(array);
-    console.log(partecipanti);
     boxAmicizia.innerHTML = array
         .map((user) => {
             const isChecked = partecipanti.some(partecipante => partecipante.Username === user.username) ? 'checked' : '';
@@ -284,14 +303,8 @@ const getSelectedFriends = () => {
     return selectedFriends;
 }
 
-invita.onclick = () => {
-    getUserFriends(username).then((data) => {
-        console.log("Room: " + room);
-        getChatParticipants(room).then((partecipanti) => {
-            console.log("Partecipanti: " + partecipanti);
-            renderInvito(data, partecipanti);
-        });
-    });
+invita.onclick = async () => {
+    renderInvito(await getUserFriends(username), await getChatParticipants(room));
 }
 
 function getSelectedCheckboxes(personale) {
@@ -310,17 +323,12 @@ function getSelectedCheckboxes(personale) {
     return selectedValues;
 }
 
-inviaAmicizia.onclick = () => {
+inviaAmicizia.onclick = async () => {
     const arrayAggiunta = getSelectedCheckboxes(username);
-    addUsersToChat(room, arrayAggiunta).then((data) => {
-        console.log(data);
-    });
+    await addUsersToChat(room, arrayAggiunta);
 }
-// Crea un oggetto per memorizzare le funzioni di gestione degli eventi
-
 
 const renderRichieste = (array) => {
-    console.log(array);
     checkBoxRichieste.innerHTML = array
         .map((user, index) => {
             return `<div class="row mt-3 d-flex align-items-center">
@@ -350,35 +358,24 @@ close
         .join("");
 
     array.forEach((user, index) => {
-        document.getElementById(`accept_${index}`).onclick = () => {
-            acceptFriendship(username, user.username).then(() => {
-                getUnacceptedFriendships(username).then((data) => {
-                    renderRichieste(data);
-                });
-            });
+        document.getElementById(`accept_${index}`).onclick = async () => {
+            await acceptFriendship(username, user.username);
+            renderRichieste(await getUnacceptedFriendships(username));
         }
-
-        document.getElementById(`reject_${index}`).onclick = () => {
-            rejectFriendship(username, user.username).then(() => {
-                getUnacceptedFriendships(username).then((data) => {
-                    renderRichieste(data);
-                });
-            });
+        document.getElementById(`reject_${index}`).onclick = async () => {
+            await rejectFriendship(username, user.username);
+            renderRichieste(getUnacceptedFriendships(username));
         }
     });
 }
 
-gestisciRichieste.onclick = () => {
-    getUnacceptedFriendships(username).then((data) => {
-        console.log(data);
-        renderRichieste(data);
-    });
+gestisciRichieste.onclick = async () => {
+    renderRichieste(await getUnacceptedFriendships(username));
 }
 
 document.getElementById('messaggio').addEventListener('keydown', function (event) {
     if (event.key === 'Enter' && event.shiftKey) {
         // Se sia Shift che Enter sono premuti, permetti l'azione predefinita (andare a capo)
-        return;
     } else if (event.key === 'Enter') {
         // Se solo Enter è premuto, previeni l'azione predefinita e simula un click sul bottone "invia"
         event.preventDefault();

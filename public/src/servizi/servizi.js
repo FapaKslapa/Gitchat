@@ -194,3 +194,17 @@ export async function getUserOwnedChats(username) {
     console.log(data);
     return data;
 }
+
+/**
+ * Funzione per scaricare un file.
+ * @param {string} room - Il nome della room.
+ * @param {string} filename - Il nome del file.
+ */
+export async function downloadFile(room, filename) {
+    const response = await fetch(`/download/${room}/${filename}`);
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const blob = await response.blob();
+    saveAs(blob, filename);
+}
