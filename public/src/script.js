@@ -45,7 +45,7 @@ const templateFile = `<div class="card card-file">
                 %NOMEFILE
             </div>
             <div class="col-auto align-middle">
-                <button type="button" class="btn btn-info align-middle btn-sm" id="%IDFILE" value="%VALUEFILE"><span
+                <button type="button" class="btn btn-info align-middle btn-sm button-file" id="%IDFILE" value="%VALUEFILE"><span
                     class="material-symbols-rounded align-middle">
 download
 </span></button>
@@ -248,6 +248,13 @@ function displayMessages(array) {
     if (lastMessage) {
         lastMessage.scrollIntoView();
     }
+    const buttons = document.querySelectorAll('.button-file');
+    buttons.forEach(button => {
+        button.onclick = async () => {
+            // Stampa il valore del bottone
+            await downloadFile(room, button.value);
+        }
+    });
 }
 
 const renderInvito = (array, partecipanti) => {

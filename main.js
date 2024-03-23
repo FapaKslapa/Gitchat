@@ -87,7 +87,7 @@ io.on("connection", (socket) => {
         if (!temporaryMessages[room]) {
             temporaryMessages[room] = [];
         }
-        temporaryMessages[room].push({username, message, FileName: filePath, timestamp});
+        temporaryMessages[room].push({username, message, FileName: uniqueName, timestamp});
     });
 
     socket.on("leaveRoom", (room, username) => {
@@ -569,12 +569,24 @@ app.get("/user/:username/owned-chats", (req, res) => {
     });
 });
 
-app.get('/download/:room/:filename', (req, res) => {
-    const room = req.params.room;
-    const filename = req.params.filename;
+app.post('/download', (req, res) => {
+    const room = req.body.room;
+    const filename = req.body.filename;
+    console.log(`Room: ${room}`);
+    console.log(`Filename: ${filename}`);
     const filePath = path.join('uploads', room, filename);
+    console.log(`File Path: ${filePath}`);
 
-    res.download(filePath, filename, (err) => {
+    // Estrai l'estensione del file
+    const extension = path.extname(filename);
+
+    // Estrai la parte del nome del file dopo l'underscore
+    const namePart = filename.split('_')[1];
+
+    // Crea un nuovo nome di file univoco
+    const newFilename = `${namePart}${extension}`;
+
+    res.download(filePath, newFilename, (err) => {
         if (err) {
             console.log(err);
             res.status(500).send({
