@@ -32,6 +32,7 @@
             media="screen"
     />
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="./style.css"/>
 
@@ -87,7 +88,7 @@ forum
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h1 class="modal-title" id="">Amicizie</h1>
+                <h1 class="modal-title">Amicizie</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -109,7 +110,7 @@ forum
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <button type="submit" class="btn btn-primary" id="newFriend">Crea chat</button>
+                                <button type="submit" class="btn btn-primary" id="newFriend">Aggiungi amico</button>
                             </div>
                         </div>
                     </form>
@@ -128,14 +129,24 @@ forum
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h1>Invita alla chat</h1>
+                <h1>Gestisci chat</h1>
                 <button type="button" class="btn btn-dark btn-lg align-middle ms-auto" data-bs-dismiss="modal"
                 ><span class="material-symbols-rounded align-middle">
 close
 </span></button>
             </div>
             <div class="modal-body">
-                <div id="checkBoxAmicizia">
+                <div class="row">
+                    <h5>Gestisci partecipanti</h5>
+                    <div id="checkBoxGestisci">
+                    </div>
+
+                </div>
+                <hr>
+                <div class="row mt-2">
+                    <h5>Invita amici</h5>
+                    <div id="checkBoxAmicizia">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer border-0">
@@ -264,7 +275,7 @@ close
                         <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
                                 id="invitaInChat" data-bs-target="#modalChatAmicizia" disabled>
             <span class="material-symbols-rounded align-middle">
-                group_add
+                manage_accounts
             </span>
                         </button>
                     </div>
@@ -321,18 +332,34 @@ folder_data
                 </div>
             </div>
             <form id="form" onsubmit="return false" class="customForm">
-                <div class="form-group">
-                    <textarea class="form-control message-input" id="messaggio" rows="3"
-                              placeholder="Scrivi un messaggio"></textarea>
-                    <label for="file-input" class="btn btn-primary file-button align-middle"><span
-                            class="material-symbols-rounded align-middle">
+                <div class="form-group position-relative">
+                    <div class="border p-3 rounded text-center position-absolute creator-div d-none" id="divSelectFile">
+                        <div class="row justify-content-between">
+                            <div class="col-auto" id="fileNameSelect">
+
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-info btn-sm" id="deleteSelectFile">
+                                    <span class="material-symbols-rounded align-middle">
+close
+</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end">
+            <textarea class="form-control message-input" id="messaggio" rows="3"
+                      placeholder="Scrivi un messaggio"></textarea>
+                        <label for="file-input" class="btn btn-primary file-button align-middle"><span
+                                class="material-symbols-rounded align-middle">
 attach_file
 </span></label>
-                    <input id="file-input" type="file" class="file-input"/>
-                    <button class="btn btn-info send-button align-middle" type="submit" id="invia"><span
-                            class="material-symbols-rounded align-middle">
+                        <input id="file-input" type="file" class="file-input"/>
+                        <button class="btn btn-info send-button align-middle" type="submit" id="invia"><span
+                                class="material-symbols-rounded align-middle">
 send
 </span></button>
+                    </div>
                 </div>
             </form>
         </div>

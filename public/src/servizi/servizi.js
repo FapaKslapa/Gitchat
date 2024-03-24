@@ -210,5 +210,6 @@ export async function downloadFile(room, filename) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
     const blob = await response.blob();
+    console.log(blob);
     saveAs(blob, filename.split("_")[1]);
 }

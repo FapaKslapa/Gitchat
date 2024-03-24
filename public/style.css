@@ -256,6 +256,7 @@ a.article:hover {
 .message-input {
     padding-right: 5rem; /* Spazio per il bottone 'Send' */
     padding-left: 5rem; /* Spazio per il bottone 'File' */
+    z-index: 9;
 }
 
 .file-button {
@@ -398,4 +399,12 @@ a.article:hover {
 }
 
 .profile-image {
+}
+
+.creator-div {
+    top: -4rem;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    background: #101415;
 }

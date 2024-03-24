@@ -66,12 +66,17 @@ io.on("connection", (socket) => {
     });
 
     socket.on('file', (room, {username, message, timestamp, file, fileName}) => {
+        console.log("Entrato qui");
         const roomDir = path.join('uploads', room);
         mkdirp.sync(roomDir); // Ensure the directory exists
         const uniqueName = `${uuidv4(undefined, undefined, undefined)}_${fileName}`;
         const filePath = path.join(roomDir, uniqueName);
+        console.log(`File object: ${JSON.stringify(file)}`); // Log the file object
         fs.writeFile(filePath, Buffer.from(file), (err) => {
-            if (err) throw err;
+            if (err) {
+                console.log(`Error writing file: ${err}`); // Log any errors
+                throw err;
+            }
             console.log('file salvato');
         });
 
@@ -162,6 +167,11 @@ app.get("/user/:username/chats", (req, res) => {
                  WHERE partecipazione.IdAccount = ?`;
     db.query(sql, [username], (err, result) => {
         if (err) res.json({message: "Errore"});
+
+        // If there are no chats, return an empty array
+        if (result.length === 0) {
+            return res.json([]);
+        }
 
         let chats = result;
         let completedQueries = 0;
@@ -271,7 +281,7 @@ app.post("/chat", (req, res) => {
 app.post("/chat/:id/users", (req, res) => {
     const chatId = req.params.id;
     const {users} = req.body;
-
+    console.log(users);
     // Elimina tutti i partecipanti dalla chat
     const sqlDelete = `DELETE
                        FROM partecipazione
@@ -331,6 +341,7 @@ app.post("/message", (req, res) => {
 
 // Aggiungere un'amicizia
 app.post("/friendship", (req, res) => {
+    console.log("Richiamato");
     const {username1, username2} = req.body;
     // Check if both users exist
     if (username1 === username2) {
