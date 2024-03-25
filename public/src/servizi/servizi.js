@@ -37,14 +37,10 @@ export async function getUserFriends(username) {
  */
 export async function createChat(nomeChat, users, proprietario) {
     const chat = {
-        nomeChat: nomeChat,
-        users: users,
-        proprietario: proprietario
+        nomeChat: nomeChat, users: users, proprietario: proprietario
     }
     const response = await fetch("/chat", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(chat),
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(chat),
     });
     const data = await response.json();
     console.log(data.message);
@@ -58,9 +54,7 @@ export async function createChat(nomeChat, users, proprietario) {
  */
 export async function addFriendship(username1, username2) {
     const response = await fetch("/friendship", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username1, username2}),
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username1, username2}),
     });
     const data = await response.json();
     console.log(data.message);
@@ -74,9 +68,7 @@ export async function addFriendship(username1, username2) {
  */
 export async function editMessage(id, newText) {
     const response = await fetch(`/message/${id}`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({newText}),
+        method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({newText}),
     });
     const data = await response.json();
     console.log(data.message);
@@ -101,14 +93,10 @@ export async function deleteMessage(id) {
  */
 export async function login(username, password) {
     const response = await fetch("/login", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username, password}),
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username, password}),
     });
     const data = await response.json();
-    console.log(
-        data.login ? "Accesso effettuato con successo" : "Accesso non riuscito"
-    );
+    console.log(data.login ? "Accesso effettuato con successo" : "Accesso non riuscito");
 }
 
 /**
@@ -119,9 +107,7 @@ export async function login(username, password) {
 export async function addUsersToChat(chatId, users) {
     console.log(chatId);
     const response = await fetch(`/chat/${chatId}/users`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({users}),
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({users}),
     });
     const data = await response.json();
     console.log(data.message);
@@ -146,9 +132,7 @@ export async function getChatParticipants(chatId) {
  */
 export async function acceptFriendship(username1, username2) {
     const response = await fetch("/friendship/accept", {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username1, username2}),
+        method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username1, username2}),
     });
     const data = await response.json();
     console.log(data.message);
@@ -174,9 +158,7 @@ export async function getUnacceptedFriendships(username) {
  */
 export async function rejectFriendship(username1, username2) {
     const response = await fetch("/friendship/reject", {
-        method: "DELETE",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username1, username2}),
+        method: "DELETE", headers: {"Content-Type": "application/json"}, body: JSON.stringify({username1, username2}),
     });
     const data = await response.json();
     console.log(data.message);
@@ -202,9 +184,7 @@ export async function getUserOwnedChats(username) {
  */
 export async function downloadFile(room, filename) {
     const response = await fetch(`/download`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({room, filename}),
+        method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({room, filename}),
     });
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -212,4 +192,16 @@ export async function downloadFile(room, filename) {
     const blob = await response.blob();
     console.log(blob);
     saveAs(blob, filename.split("_")[1]);
+}
+
+/**
+ * Funzione per recuperare i dettagli di un utente.
+ * @param {string} username - Il nome dell'utente.
+ */
+export async function getUserDetails(username) {
+    const response = await fetch(`/user/${username}/details`);
+    const data = await response.json();
+    console.log(`Dettagli dell'utente ${username}:`);
+    console.log(data);
+    return data;
 }

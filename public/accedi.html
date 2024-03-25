@@ -42,6 +42,7 @@
             integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
             crossorigin=""
     ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <link rel="stylesheet" href="./style.css"/>
 </head>
 <body class="sfondo">
@@ -149,7 +150,14 @@
                 </form>
             </div>
             <div class="col-md-auto d-none d-md-block">
-                <div class="vl"></div>
+                <div class="row">
+                    <div class="col-auto">
+                        <div class="vl"></div>
+                    </div>
+                    <div class="col-md-9">
+                        <div id="animatedCircle"></div>
+                    </div>
+                </div>
             </div>
 
         </div>

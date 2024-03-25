@@ -26,3 +26,14 @@ button.onclick = () => {
             }
         });
 };
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    gsap.to("#animatedCircle", {
+        x: "100vw", // Muovi il cerchio fino al bordo destro della finestra
+        repeat: -1, // Ripeti all'infinito
+        yoyo: true, // Vai avanti e indietro
+        duration: 2, // Durata di ogni ciclo di animazione
+        ease: "power1.inOut" // Easing per un movimento più fluido
+    });
+});

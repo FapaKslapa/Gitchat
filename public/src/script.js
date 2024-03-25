@@ -9,7 +9,9 @@ import {
     getUserChats,
     getUserFriends,
     rejectFriendship,
-    downloadFile, getUserOwnedChats
+    downloadFile,
+    getUserOwnedChats,
+    getUserDetails
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -34,6 +36,12 @@ const newChatButton = document.getElementById("newChatButton");
 const divSelectFile = document.getElementById("divSelectFile");
 const fileNameSelect = document.getElementById("fileNameSelect");
 const deleteSelectFile = document.getElementById("deleteSelectFile");
+
+const nomeUtenteProfilo = document.getElementById("nomeUtenteProfilo");
+const mailUtenteProfilo = document.getElementById("mailUtenteProfilo");
+const passwordUtenteProfilo = document.getElementById("passwordUtenteProfilo");
+const numeroAmiciProfilo = document.getElementById("numeroAmiciProfilo");
+const imgUtenteProfilo = document.getElementById("imgUtenteProfilo");
 const eventHandlers = {};
 let chatSelezionata = "";
 let chats = [];
@@ -41,8 +49,6 @@ let mieChat = [];
 let username = "";
 let password = "";
 const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E", "#F63E02", "#46237A", "#256EFF", "#FF495C", "#FEE440", "#00BBF9", "#00F5D4", "#72B01D", "#3F7D20", "#348AA7", "#440D0F"];
-
-const templateFileSelect = '<div class="border p-3 rounded text-center position-absolute creator-div">%NOME FILE</div>';
 const templateFile = `<div class="card card-file">
     <div class="card-body">
         <div class="row justify-content-end align-middle">
@@ -93,6 +99,13 @@ const templateMessageAltro = `
     <img src="%SRC" alt="avatar"
          class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
 </li>`;
+const setProfile = (profile) => {
+    nomeUtenteProfilo.innerHTML = profile.Username;
+    mailUtenteProfilo.innerHTML = profile.Mail;
+    passwordUtenteProfilo.innerHTML = profile.Password;
+    numeroAmiciProfilo.innerHTML = profile.numFriends;
+    imgUtenteProfilo.src = `data:image/jpeg;base64,${profile.ImmagineProfilo}`;
+}
 const handleClick = async (i, array) => {
     socket.emit("leaveRoom", room, username);
     messageData = [];
@@ -146,12 +159,12 @@ const renderChat = (array) => {
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "/accedi.html";
 } else {
-    console.log("Entrato");
+    const user = await getUserDetails(sessionStorage.getItem("username"));
+    sessionStorage.setItem("username", user.Username);
     username = sessionStorage.getItem("username");
     password = sessionStorage.getItem("password");
-    console.log("GG");
+    setProfile(user);
     chats = await getUserChats(username);
-    console.log(chats);
     mieChat = await getUserOwnedChats(username);
     listChat.innerHTML = chats
         .map((chat) => {
@@ -622,3 +635,4 @@ deleteSelectFile.onclick = () => {
         }
     });
 };
+

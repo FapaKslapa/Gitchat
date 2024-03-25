@@ -606,3 +606,32 @@ app.post('/download', (req, res) => {
         }
     });
 });
+
+app.get("/user/:username/details", (req, res) => {
+    const username = req.params.username;
+    const sql = `SELECT Username, ImmagineProfilo, Token, Mail, Password
+                 FROM account
+                 WHERE Username = ?`;
+    db.query(sql, [username], (err, result) => {
+        if (err) throw err;
+
+        if (result.length === 0) {
+            return res.status(400).json({message: "User does not exist"});
+        }
+
+        let user = result[0];
+        let imagePath = `./images/${user.ImmagineProfilo}`;
+        user.ImmagineProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
+
+        const sqlFriends = `SELECT COUNT(*) as numFriends
+                            FROM amicizia
+                            WHERE (IdAccount1 = ? OR IdAccount2 = ?)
+                              AND Stato = 1`;
+        db.query(sqlFriends, [username, username], (err, result) => {
+            if (err) throw err;
+
+            user.numFriends = result[0].numFriends;
+            res.json(user);
+        });
+    });
+});
