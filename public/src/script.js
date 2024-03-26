@@ -11,7 +11,8 @@ import {
     rejectFriendship,
     downloadFile,
     getUserOwnedChats,
-    getUserDetails
+    getUserDetails,
+    getChatFileMessages
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -36,23 +37,31 @@ const newChatButton = document.getElementById("newChatButton");
 const divSelectFile = document.getElementById("divSelectFile");
 const fileNameSelect = document.getElementById("fileNameSelect");
 const deleteSelectFile = document.getElementById("deleteSelectFile");
-
+const buttonProfilo = document.getElementById("buttonProfilo");
 const nomeUtenteProfilo = document.getElementById("nomeUtenteProfilo");
 const mailUtenteProfilo = document.getElementById("mailUtenteProfilo");
 const passwordUtenteProfilo = document.getElementById("passwordUtenteProfilo");
 const numeroAmiciProfilo = document.getElementById("numeroAmiciProfilo");
 const imgUtenteProfilo = document.getElementById("imgUtenteProfilo");
+const buttonFile = document.getElementById("buttonFile");
+const buttonChat = document.getElementById("buttonChat");
+const fileSection = document.getElementById("fileSection");
+const cardFileSection = document.getElementById("cardFileSection");
 const eventHandlers = {};
 let chatSelezionata = "";
 let chats = [];
 let mieChat = [];
+let messageData = []; // Array per salvare i dati dei messaggi
+let userColors = {};
+let user = {};
+let room = "";
 let username = "";
 let password = "";
 const pastelColors = ["#258EA6", "#549F93", "#EDB458", "#E8871E", "#F63E02", "#46237A", "#256EFF", "#FF495C", "#FEE440", "#00BBF9", "#00F5D4", "#72B01D", "#3F7D20", "#348AA7", "#440D0F"];
 const templateFile = `<div class="card card-file">
     <div class="card-body">
         <div class="row justify-content-end align-middle">
-            <div class="col align-middle">
+            <div class="col align-middle name-file-display">
                 %NOMEFILE
             </div>
             <div class="col-auto align-middle">
@@ -64,6 +73,26 @@ download
         </div>
     </div>
 </div>`
+const templateFileSection = `<div class="col"><div class="card card-file">
+<div class="card-header d-flex justify-content-between align-items-center">
+    <p class="fw-bold mb-0 me-3">%USERNAME</p>
+    <p class="small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
+</div>
+  <div class="card-body">
+  
+    <div class="row justify-content-end align-middle">
+            <div class="col align-middle">
+                %NOMEFILE
+            </div>
+            <div class="col-auto align-middle">
+                <button type="button" class="btn btn-info align-middle btn-sm button-file-section" id="%IDFILE" value="%VALUEFILE"><span
+                    class="material-symbols-rounded align-middle">
+download
+</span></button>
+            </div>
+        </div>
+  </div>
+</div></div>`;
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
     <img src="%SRC" alt="avatar"
@@ -99,11 +128,16 @@ const templateMessageAltro = `
     <img src="%SRC" alt="avatar"
          class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
 </li>`;
+
+
 const setProfile = (profile) => {
-    nomeUtenteProfilo.innerHTML = profile.Username;
-    mailUtenteProfilo.innerHTML = profile.Mail;
-    passwordUtenteProfilo.innerHTML = profile.Password;
-    numeroAmiciProfilo.innerHTML = profile.numFriends;
+    const duration = 1.0; // Durata dell'animazione in secondi
+    gsap.to(nomeUtenteProfilo, {duration, text: profile.Username, ease: "power1.out"});
+    gsap.to(mailUtenteProfilo, {duration, text: profile.Mail, ease: "power1.out"});
+    gsap.to(passwordUtenteProfilo, {duration, text: profile.Password, ease: "power1.out"});
+    gsap.to(numeroAmiciProfilo, {duration, text: profile.numFriends, ease: "power1.out"});
+
+    // Per l'immagine, non c'è bisogno di un'animazione di testo
     imgUtenteProfilo.src = `data:image/jpeg;base64,${profile.ImmagineProfilo}`;
 }
 const handleClick = async (i, array) => {
@@ -156,89 +190,54 @@ const renderChat = (array) => {
         });
     }
 };
-if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
-    window.location.href = "/accedi.html";
-} else {
-    const user = await getUserDetails(sessionStorage.getItem("username"));
-    sessionStorage.setItem("username", user.Username);
-    username = sessionStorage.getItem("username");
-    password = sessionStorage.getItem("password");
-    setProfile(user);
-    chats = await getUserChats(username);
-    mieChat = await getUserOwnedChats(username);
-    listChat.innerHTML = chats
-        .map((chat) => {
-            const usernames = chat.users.map(user => user.username).join(", ");
-            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
-                    <p>${usernames}</p></a>
-                    </li>`;
-        })
-        .join("");
-    console.log("Finito");
-    renderChat(chats);
-}
+const renderFile = (array) => {
+    // Clear the cardFileSection
+    cardFileSection.innerHTML = '';
 
-newFriend.onclick = async () => {
-    await addFriendship(username, usernameFriend.value)
-}
-newChat.onclick = async () => {
-    const data = getSelectedFriends();
-    await createChat(nomeChat.value, data, username);
-}
-newChatButton.onclick = async () => {
-    const data = await getUserFriends(username);
-    renderInvitoChat(data);
+    array.forEach((file, index) => {
+        console.log(file);
+        const nomeFile = file.path.split("_")[1];
+        let dataInvio = new Date(file.dataInvio);
+        let oraInvio = file.oraInvio.split(":");
+// Imposta l'ora e i minuti della data con i valori di oraInvio
+        dataInvio.setHours(oraInvio[0], oraInvio[1]);
 
-}
-socket.on("chat message", (message) => {
-    messageData.push(message); // Aggiungi il messaggio all'array
-    console.log(message);
-    displayNewMessage(messageData); // Visualizza i messaggi
-});
+        let formattedDate = dataInvio.toLocaleDateString("it-IT", {
+            year: "2-digit",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+        // Create a new card
+        const card = templateFileSection.replace("%NOMEFILE", nomeFile).replace("%IDFILE", file.path).replace("%VALUEFILE", file.path).replace("%USERNAME", file.autore).replace("%TEMPO", formattedDate);
 
-let room = "";
-form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const timestamp = new Date().toLocaleString("it-IT", {
-        year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+        // Add the card to the DOM
+        cardFileSection.insertAdjacentHTML('beforeend', card);
+
+        // Select the card we just added
+        const addedCard = cardFileSection.lastElementChild;
+
+        // Animate the card with GSAP
+        gsap.fromTo(addedCard, {
+            y: 100, // Start 100px below the final position
+            opacity: 0, // Start completely transparent
+        }, {
+            y: 0, // End at the final position
+            opacity: 1, // End completely visible
+            ease: 'power1.out', // Use a specific transition type
+            duration: 0.3, // The animation lasts 0.5 seconds
+            delay: index * 0.2, // Delay the start of the animation by 0.5 seconds for each card
+        });
     });
-    if (input.value) {
-        if (fileInput.files.length > 0) {
-            console.log(input.value);
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const blob = new Blob([event.target.result], {type: file.type});
-                socket.emit("file", room, {
-                    username, message: input.value, timestamp, file: blob, fileName: file.name
-                });
-                input.value = "";
-                fileInput.value = "";
-            };
-            reader.onerror = function (error) {
-                console.log('Error reading file:', error); // Log any errors
-            };
-            reader.readAsArrayBuffer(file);
-            gsap.fromTo(divSelectFile, {y: 0, autoAlpha: 1}, {
-                y: 100, autoAlpha: 0, duration: 0.5, onComplete: () => {
-                    fileInput.value = "";
-                    divSelectFile.classList.add("d-none");
-                }
-            });
-        } else {
-            socket.emit("chat message", room, {
-                username, message: input.value, timestamp,
-            });
-            input.value = "";
-            fileInput.value = "";
+    const buttons = document.querySelectorAll('.button-file-section');
+    buttons.forEach(button => {
+        button.onclick = async () => {
+            await downloadFile(room, button.value);
         }
-    }
-});
-let messageData = []; // Array per salvare i dati dei messaggi
-
-let userColors = {};
-
-function displayMessages(array) {
+    });
+};
+const displayMessages = (array) => {
     const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
     messages.innerHTML = '';
     array.forEach(({IdAutore, Testo, Data_invio, Ora_invio, Path}, index) => {
@@ -299,8 +298,8 @@ function displayMessages(array) {
             x: 0, // Il messaggio finisce nella sua posizione finale
             opacity: 1, // L'opacità finisce a 1 (completamente visibile)
             ease: 'power1.out', // Questo è il tipo di transizione che viene utilizzato per l'animazione
-            duration: 0.5, // L'animazione dura 0.5 secondi
-            delay: index * 0.3, onComplete: () => addedElement.scrollIntoView({behavior: 'smooth'}) // Scorri fino al messaggio appena animato quando l'animazione è terminata
+            duration: 0.3, // L'animazione dura 0.5 secondi
+            delay: index * 0.1, onComplete: () => addedElement.scrollIntoView({behavior: 'smooth'}) // Scorri fino al messaggio appena animato quando l'animazione è terminata
         });
     });
 
@@ -311,8 +310,7 @@ function displayMessages(array) {
         }
     });
 }
-
-function displayNewMessage(array) {
+const displayNewMessage = (array) => {
     const chat = chats.find(chat => chat.NomeChat === chatSelezionata);
     messages.innerHTML = '';
     array.forEach(({IdAutore, Testo, Data_invio, Ora_invio, Path}, index) => {
@@ -387,7 +385,6 @@ function displayNewMessage(array) {
         }
     });
 }
-
 const renderInvitoChat = (friends) => {
     checkBoxChat.innerHTML = '';
     friends.forEach((friend, index) => {
@@ -424,31 +421,7 @@ const renderInvitoChat = (friends) => {
         });
     });
 }
-
-const getSelectedFriends = () => {
-    // Get all checkboxes
-    const checkboxes = document.querySelectorAll('.btn-check');
-    let selectedFriends = [];
-
-    // Loop through each checkbox
-    for (let i = 0; i < checkboxes.length; i++) {
-        // If the checkbox is checked and its id starts with 'invitaChat_', add its value to the array
-        if (checkboxes[i].checked && checkboxes[i].id.startsWith('invitaChat_')) {
-            selectedFriends.push(checkboxes[i].value);
-        }
-    }
-
-    return selectedFriends;
-}
-
-invita.onclick = async () => {
-    const friends = await getUserFriends(username);
-    const partecicipants = await getChatParticipants(room);
-    renderInvito(friends, partecicipants);
-    renderPartecipanti(partecicipants);
-}
-
-function getSelectedCheckboxes(personale) {
+const getSelectedCheckboxes = (personale) => {
     // Get all checkboxes
     const checkboxes = document.querySelectorAll('.btn-check');
     let selectedValues = [];
@@ -463,12 +436,6 @@ function getSelectedCheckboxes(personale) {
     selectedValues.push(personale);
     return selectedValues;
 }
-
-inviaAmicizia.onclick = async () => {
-    const arrayAggiunta = getSelectedCheckboxes(username);
-    await addUsersToChat(room, arrayAggiunta);
-}
-
 const renderRichieste = (array) => {
     checkBoxRichieste.innerHTML = array
         .map((user, index) => {
@@ -524,25 +491,25 @@ close
         });
     });
 }
+const getSelectedFriends = () => {
+    // Get all checkboxes
+    const checkboxes = document.querySelectorAll('.btn-check');
+    let selectedFriends = [];
 
-gestisciRichieste.onclick = async () => {
-    renderRichieste(await getUnacceptedFriendships(username));
-}
-
-document.getElementById('messaggio').addEventListener('keydown', function (event) {
-    if (event.key === 'Enter' && event.shiftKey) {
-        // Se sia Shift che Enter sono premuti, permetti l'azione predefinita (andare a capo)
-    } else if (event.key === 'Enter') {
-        // Se solo Enter è premuto, previeni l'azione predefinita e simula un click sul bottone "invia"
-        event.preventDefault();
-        document.getElementById('invia').click();
+    // Loop through each checkbox
+    for (let i = 0; i < checkboxes.length; i++) {
+        // If the checkbox is checked and its id starts with 'invitaChat_', add its value to the array
+        if (checkboxes[i].checked && checkboxes[i].id.startsWith('invitaChat_')) {
+            selectedFriends.push(checkboxes[i].value);
+        }
     }
-});
 
+    return selectedFriends;
+}
 const renderInvito = (array, partecipanti) => {
     boxAmicizia.innerHTML = '';
     array.forEach((friend, index) => {
-        const isFriendInParticipants = partecipanti.some(partecipante => partecipante.Username === friend.username);
+        const isFriendInParticipants = partecipanti.some(partecipante => partecipante.username === friend.username);
         let checkDisabled = isFriendInParticipants ? 'disabled' : '';
         const friendElement = `<div class="row mt-3 d-flex align-items-center">
 <div class="col-md-auto">
@@ -582,20 +549,20 @@ const renderPartecipanti = (partecipanti) => {
     boxGestisciChat.innerHTML = '';
     console.log(partecipanti);
     partecipanti.forEach((friend, index) => {
-        if (friend.Username.toUpperCase() === username.toUpperCase()) {
+        if (friend.username.toUpperCase() === username.toUpperCase()) {
             return;
         }
         const friendElement = `<div class="row mt-3 d-flex align-items-center">
 <div class="col-md-auto">
-<img src="data:image/jpeg;base64,${friend.ImmagineProfilo}" alt="avatar"
+<img src="data:image/jpeg;base64,${friend.profileImage}" alt="avatar"
                              class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="50">
 </div>
 <div class="col-md-auto align-middle">
-<h3 class="align-middle">${friend.Username}</h3>
+<h3 class="align-middle">${friend.username}</h3>
 </div>
 <div class="col-md-auto align-middle">
-<input type="checkbox" class="btn-check" id="invitaChat_${friend.Username}" value="${friend.Username}" autocomplete="off" checked>
-<label class="btn btn-outline-primary" for="invitaChat_${friend.Username}">Seleziona</label>
+<input type="checkbox" class="btn-check" id="invitaChat_${friend.username}" value="${friend.username}" autocomplete="off" checked>
+<label class="btn btn-outline-primary" for="invitaChat_${friend.username}">Seleziona</label>
 </div>
 </div>`;
 
@@ -618,7 +585,103 @@ const renderPartecipanti = (partecipanti) => {
         });
     });
 }
+if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
+    window.location.href = "./accedi.html";
+} else {
+    user = await getUserDetails(sessionStorage.getItem("username"));
+    sessionStorage.setItem("username", user.Username);
+    username = sessionStorage.getItem("username");
+    password = sessionStorage.getItem("password");
+    chats = await getUserChats(username);
+    mieChat = await getUserOwnedChats(username);
+    listChat.innerHTML = chats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(chats);
+}
 
+socket.on("chat message", (message) => {
+    messageData.push(message); // Aggiungi il messaggio all'array
+    console.log(message);
+    displayNewMessage(messageData); // Visualizza i messaggi
+});
+newFriend.onclick = async () => {
+    await addFriendship(username, usernameFriend.value)
+}
+newChat.onclick = async () => {
+    const data = getSelectedFriends();
+    await createChat(nomeChat.value, data, username);
+}
+newChatButton.onclick = async () => {
+    const data = await getUserFriends(username);
+    renderInvitoChat(data);
+
+}
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const timestamp = new Date().toLocaleString("it-IT", {
+        year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+    });
+    if (input.value) {
+        if (fileInput.files.length > 0) {
+            console.log(input.value);
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const blob = new Blob([event.target.result], {type: file.type});
+                socket.emit("file", room, {
+                    username, message: input.value, timestamp, file: blob, fileName: file.name
+                });
+                input.value = "";
+                fileInput.value = "";
+            };
+            reader.onerror = function (error) {
+                console.log('Error reading file:', error); // Log any errors
+            };
+            reader.readAsArrayBuffer(file);
+            gsap.fromTo(divSelectFile, {y: 0, autoAlpha: 1}, {
+                y: 100, autoAlpha: 0, duration: 0.5, onComplete: () => {
+                    fileInput.value = "";
+                    divSelectFile.classList.add("d-none");
+                }
+            });
+        } else {
+            socket.emit("chat message", room, {
+                username, message: input.value, timestamp,
+            });
+            input.value = "";
+            fileInput.value = "";
+        }
+    }
+});
+invita.onclick = async () => {
+    const friends = await getUserFriends(username);
+    const partecicipants = await getChatParticipants(room);
+    console.log(partecicipants);
+    renderInvito(friends, partecicipants);
+    renderPartecipanti(partecicipants);
+}
+inviaAmicizia.onclick = async () => {
+    const arrayAggiunta = getSelectedCheckboxes(username);
+    await addUsersToChat(room, arrayAggiunta);
+}
+gestisciRichieste.onclick = async () => {
+    renderRichieste(await getUnacceptedFriendships(username));
+}
+document.getElementById('messaggio').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && event.shiftKey) {
+        // Se sia Shift che Enter sono premuti, permetti l'azione predefinita (andare a capo)
+    } else if (event.key === 'Enter') {
+        // Se solo Enter è premuto, previeni l'azione predefinita e simula un click sul bottone "invia"
+        event.preventDefault();
+        document.getElementById('invia').click();
+    }
+});
 fileInput.addEventListener('change', function () {
     if (this.files && this.files.length > 0) {
         fileNameSelect.innerHTML = this.files[0].name;
@@ -626,7 +689,6 @@ fileInput.addEventListener('change', function () {
         gsap.fromTo(divSelectFile, {y: 100, autoAlpha: 0}, {y: 0, autoAlpha: 1, duration: 0.5});
     }
 });
-
 deleteSelectFile.onclick = () => {
     gsap.fromTo(divSelectFile, {y: 0, autoAlpha: 1}, {
         y: 100, autoAlpha: 0, duration: 0.5, onComplete: () => {
@@ -635,4 +697,35 @@ deleteSelectFile.onclick = () => {
         }
     });
 };
+buttonProfilo.onclick = () => {
+    setProfile(user);
+}
+buttonFile.onclick = async () => {
+    buttonFile.setAttribute('disabled', '');
+    buttonChat.removeAttribute('disabled');
+    // Imposta l'opacità di 'fileSection' a 0
+    gsap.set(fileSection, {autoAlpha: 0});
 
+    // Rimuovi la classe 'd-none' da 'fileSection'
+    fileSection.classList.remove('d-none');
+
+    // Animazione con GSAP
+    gsap.to(form, {autoAlpha: 0, duration: 0.5});
+    gsap.to(input, {autoAlpha: 0, duration: 0.5});
+    gsap.to(messages, {autoAlpha: 0, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 1, duration: 0.5});
+    messages.classList.add('d-none');
+    const file = await getChatFileMessages(room);
+    renderFile(file);
+};
+buttonChat.onclick = () => {
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+};

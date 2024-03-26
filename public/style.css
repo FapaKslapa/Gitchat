@@ -283,7 +283,7 @@ a.article:hover {
 .mask-custom {
     background: #D9D9D9;
     color: #101415;
-    border-radius: 2em;
+    border-radius: 1em;
     border: 2px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -407,4 +407,10 @@ a.article:hover {
     right: 0;
     z-index: 1;
     background: #101415;
+}
+
+.name-file-display {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

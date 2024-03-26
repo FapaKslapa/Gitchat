@@ -1,0 +1,629 @@
+import {createRequire} from "module";
+import fs from 'fs';
+import path from "path";
+
+const require = createRequire(import.meta.url);
+const {v4: uuidv4} = require("uuid");
+const dbConfig = require("../asset/conf.json");
+const mysql = require("mysql2");
+// Crea una connessione al database
+const db = mysql.createConnection(dbConfig);
+db.connect((err) => {
+    if (err) {
+        throw err;
+    }
+    console.log("Connesso al database!");
+});
+
+export const saveMessagesToDatabase = (room, temporaryMessages) => {
+    let messages = temporaryMessages[room];
+    if (messages && messages.length > 0) {
+        let messageId = 0;
+        // Connect to the database and save the messages
+        messages.forEach(({username, message, timestamp, FileName}) => {
+            messageId = uuidv4(undefined, undefined, undefined);
+            let [date, time] = timestamp.split(", ");
+            let [day, month, year] = date.split("/");
+            year = "20" + year; // Add the century to the year
+            month = month - 1; // Subtract 1 from the month
+            let dateObject = new Date(year, month, day, ...time.split(':'));
+            let sqlDate = dateObject.toISOString().split('T')[0]; // Get the date part in 'YYYY-MM-DD' format
+            let sqlTime = dateObject.toTimeString().split(' ')[0]; // Get the time part in 'HH:MM:SS' format
+            console.log(sqlDate, sqlTime);
+            const sqlMessage = FileName ? `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat, Path)
+                                           VALUES (?, ?, ?, ?, ?, ?,
+                                                   ?)` : `INSERT INTO messaggio (Id, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
+                                                          VALUES (?, ?, ?, ?, ?, ?)`;
+            const params = FileName ? [messageId, message, sqlDate, sqlTime, username, room, FileName] : [messageId, message, sqlDate, sqlTime, username, room];
+            db.query(sqlMessage, params, (err) => {
+                if (err) throw err;
+            });
+        });
+
+        // Clear the temporary messages for this chat
+        temporaryMessages[room] = [];
+    }
+};
+
+
+// messageService.js
+
+export const getMessages = (db, chatId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT *
+                     FROM messaggio
+                     WHERE IdChat = ?
+                     ORDER BY Data_invio, Ora_invio `;
+        db.query(sql, [chatId], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
+
+export const formatMessages = (messages) => {
+    return messages.map(message => {
+        let dateFromDb = message.Data_invio;
+        let date = new Date(dateFromDb);
+        date.setDate(date.getDate() + 1);
+        message.Data_invio = date.toISOString();
+        return message;
+    });
+};
+
+export const getFriendsFromDatabase = (db, username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT IdAccount1 as username, account1.ImmagineProfilo as fotoProfilo
+                     FROM amicizia
+                              JOIN account as account1 ON amicizia.IdAccount1 = account1.Username
+                     WHERE IdAccount2 = ?
+                       AND stato = true
+                     UNION
+                     SELECT IdAccount2 as username, account2.ImmagineProfilo as fotoProfilo
+                     FROM amicizia
+                              JOIN account as account2 ON amicizia.IdAccount2 = account2.Username
+                     WHERE IdAccount1 = ?
+                       AND stato = true`;
+        db.query(sql, [username, username], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
+
+export const convertImagesToBase64 = (result) => {
+    result.forEach((user, index) => {
+        let imagePath = `./images/${user.fotoProfilo}`;
+        result[index].fotoProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
+    });
+    return result;
+};
+
+export const getChats = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT *
+                     FROM chat
+                              JOIN partecipazione ON chat.Id = partecipazione.IdChat
+                     WHERE partecipazione.IdAccount = ?`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
+
+export const getChatUsers = (chatId) => {
+    return new Promise((resolve, reject) => {
+        const sqlUsers = `SELECT account.Username, account.ImmagineProfilo
+                          FROM account
+                                   JOIN partecipazione ON account.Username = partecipazione.IdAccount
+                          WHERE partecipazione.IdChat = ?`;
+        db.query(sqlUsers, [chatId], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result.map(user => {
+                    let imagePath = `./images/${user.ImmagineProfilo}`;
+                    let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
+                    return {
+                        username: user.Username, profileImage: imageAsBase64
+                    };
+                }));
+            }
+        });
+    });
+};
+export const getChatParticipants = (chatId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT account.Username, account.ImmagineProfilo
+                     FROM account
+                              JOIN partecipazione ON account.Username = partecipazione.IdAccount
+                     WHERE partecipazione.IdChat = ?`;
+        db.query(sql, [chatId], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result.map(user => {
+                    let imagePath = `./images/${user.ImmagineProfilo}`;
+                    let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
+                    return {
+                        username: user.Username, profileImage: imageAsBase64
+                    };
+                }));
+            }
+        });
+    });
+};
+
+
+export const createChat = (nomeChat, proprietario) => {
+    return new Promise((resolve, reject) => {
+        const DataCreazione = new Date();
+        const chatId = uuidv4(undefined, undefined, undefined);
+        const sqlChat = `INSERT INTO chat (Id, DataCreazione, NomeChat, Proprietario)
+                         VALUES (?, ?, ?, ?)`;
+        db.query(sqlChat, [chatId, DataCreazione, nomeChat, proprietario], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({chatId, message: "Chat creata con successo"});
+            }
+        });
+    });
+};
+
+export const addParticipantsToChat = (chatId, users) => {
+    return new Promise((resolve, reject) => {
+        let completedQueries = 0;
+        users.forEach((user) => {
+            const sqlPartecipazione = `INSERT INTO partecipazione (IdChat, IdAccount)
+                                       VALUES (?, ?)`;
+            db.query(sqlPartecipazione, [chatId, user], (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    completedQueries++;
+                    if (completedQueries === users.length) {
+                        resolve({message: "Utenti aggiunti alla chat con successo"});
+                    }
+                }
+            });
+        });
+    });
+};
+
+
+export const deleteChatParticipants = (chatId) => {
+    return new Promise((resolve, reject) => {
+        const sqlDelete = `DELETE
+                           FROM partecipazione
+                           WHERE IdChat = ?`;
+        db.query(sqlDelete, [chatId], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({message: "Participants removed from chat successfully"});
+            }
+        });
+    });
+};
+
+export const addChatParticipants = (chatId, users) => {
+    return new Promise((resolve, reject) => {
+        let completedQueries = 0;
+        users.forEach((user) => {
+            const sqlInsert = `INSERT INTO partecipazione (IdChat, IdAccount)
+                               VALUES (?, ?)`;
+            db.query(sqlInsert, [chatId, user], (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    completedQueries++;
+                    if (completedQueries === users.length) {
+                        resolve({message: "Users added to chat successfully"});
+                    }
+                }
+            });
+        });
+    });
+};
+
+export const deleteChatParticipant = (chatId, username) => {
+    return new Promise((resolve, reject) => {
+        const sqlDelete = `DELETE
+                           FROM partecipazione
+                           WHERE IdChat = ?
+                             AND IdAccount = ?`;
+        db.query(sqlDelete, [chatId, username], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({message: "Utente rimosso dalla chat con successo"});
+            }
+        });
+    });
+};
+
+export const createMessage = (Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat) => {
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO messaggio (Id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat)
+                     VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        const id = uuidv4(undefined, undefined, undefined);
+        db.query(sql, [id, Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({message: "Messaggio creato con successo"});
+            }
+        });
+    });
+};
+
+export const addFriendship = (username1, username2) => {
+    return new Promise((resolve, reject) => {
+        // Check if both users exist
+        if (username1 === username2) {
+            reject({message: "The usernames cannot be the same"});
+        }
+        const checkUsersSql = `SELECT *
+                               FROM account
+                               WHERE Username IN (?, ?)`;
+        db.query(checkUsersSql, [username1, username2], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+            if (result.length < 2) {
+                reject({message: "One or both users do not exist"});
+            }
+            // Check if friendship already exists
+            const checkFriendshipSql = `SELECT *
+                                        FROM amicizia
+                                        WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                           OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+            db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                if (result.length > 0) {
+                    reject({message: "Friendship already exists"});
+                }
+                // Insert friendship
+                const sql = `INSERT INTO amicizia (IdAccount1, IdAccount2)
+                             VALUES (?, ?)`;
+                db.query(sql, [username1, username2], (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({message: "Amicizia aggiunta con successo"});
+                    }
+                });
+            });
+        });
+    });
+};
+
+export const updateMessage = (messageId, newText) => {
+    return new Promise((resolve, reject) => {
+        const sql = `UPDATE messaggio
+                     SET Testo = ?
+                     WHERE Id = ?`;
+        db.query(sql, [newText, messageId], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({message: "Messaggio modificato con successo"});
+            }
+        });
+    });
+};
+
+export const deleteMessage = (messageId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `DELETE
+                     FROM messaggio
+                     WHERE Id = ?`;
+        db.query(sql, [messageId], (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({message: "Messaggio eliminato con successo"});
+            }
+        });
+    });
+};
+
+export const loginUser = (username, password) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT *
+                     FROM account
+                     WHERE Username = ?
+                       AND Password = ?`;
+        db.query(sql, [username, password], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (result.length > 0) {
+                    resolve({login: true});
+                } else {
+                    resolve({login: false});
+                }
+            }
+        });
+    });
+};
+
+export const registerUser = (mail, username, password) => {
+    return new Promise((resolve, reject) => {
+        // Check if all fields are provided
+        if (!mail || !username || !password) {
+            reject({message: "All fields must be provided"});
+        }
+
+        // Check if the username is unique
+        const checkUsernameSql = `SELECT *
+                                  FROM account
+                                  WHERE Username = ?`;
+        db.query(checkUsernameSql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (result.length > 0) {
+                reject({message: "Username already in use"});
+            }
+
+            // Check if the email is unique
+            const checkEmailSql = `SELECT *
+                                   FROM account
+                                   WHERE Mail = ?`;
+            db.query(checkEmailSql, [mail], (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+
+                if (result.length > 0) {
+                    reject({message: "Email already in use"});
+                }
+
+                // If the email is unique, proceed with the registration
+                const sql = `INSERT INTO account (Mail, Username, Password)
+                             VALUES (?, ?, ?)`;
+                db.query(sql, [mail, username, password], (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({message: "Registration successful"});
+                    }
+                });
+            });
+        });
+    });
+};
+
+
+export const getUnacceptedFriendships = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT account1.Username as username, account1.ImmagineProfilo as fotoProfilo
+                     FROM amicizia
+                              JOIN account as account1 ON amicizia.IdAccount1 = account1.Username
+                     WHERE IdAccount2 = ?
+                       AND Stato = 0`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                // Convert images to base64
+                result.forEach((user, index) => {
+                    let imagePath = `./images/${user.fotoProfilo}`; // Modify this path with the correct path of your images
+                    result[index].fotoProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
+                });
+                resolve(result);
+            }
+        });
+    });
+};
+
+export const acceptFriendship = (username1, username2) => {
+    return new Promise((resolve, reject) => {
+        // Check if both users exist
+        if (username1 === username2) {
+            reject({message: "The usernames cannot be the same"});
+        }
+
+        const checkUsersSql = `SELECT *
+                               FROM account
+                               WHERE Username IN (?, ?)`;
+        db.query(checkUsersSql, [username1, username2], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (result.length < 2) {
+                reject({message: "One or both users do not exist"});
+            }
+
+            // Check if friendship already exists
+            const checkFriendshipSql = `SELECT *
+                                        FROM amicizia
+                                        WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                           OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+            db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+
+                if (result.length === 0) {
+                    reject({message: "Friendship does not exist"});
+                }
+
+                // If the friendship exists, accept it
+                const sql = `UPDATE amicizia
+                             SET Stato = 1
+                             WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+                db.query(sql, [username1, username2, username2, username1], (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({message: "Friendship accepted"});
+                    }
+                });
+            });
+        });
+    });
+};
+
+
+export const rejectFriendship = (username1, username2) => {
+    return new Promise((resolve, reject) => {
+        // Check if both users exist
+        if (username1 === username2) {
+            reject({message: "The usernames cannot be the same"});
+        }
+
+        const checkUsersSql = `SELECT *
+                               FROM account
+                               WHERE Username IN (?, ?)`;
+        db.query(checkUsersSql, [username1, username2], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (result.length < 2) {
+                reject({message: "One or both users do not exist"});
+            }
+
+            // Check if friendship already exists
+            const checkFriendshipSql = `SELECT *
+                                        FROM amicizia
+                                        WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                           OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+            db.query(checkFriendshipSql, [username1, username2, username2, username1], (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+
+                if (result.length === 0) {
+                    reject({message: "Friendship does not exist"});
+                }
+
+                // If the friendship exists, reject it (delete the row)
+                const sql = `DELETE
+                             FROM amicizia
+                             WHERE (IdAccount1 = ? AND IdAccount2 = ?)
+                                OR (IdAccount1 = ? AND IdAccount2 = ?)`;
+                db.query(sql, [username1, username2, username2, username1], (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve({message: "Friendship rejected"});
+                    }
+                });
+            });
+        });
+    });
+};
+
+export const getOwnedChats = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT *
+                     FROM chat
+                     WHERE Proprietario = ?`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+};
+
+
+export const downloadFile = (room, filename) => {
+    return new Promise((resolve, reject) => {
+        const filePath = path.join('uploads', room, filename);
+
+        // Extract the file extension
+        const extension = path.extname(filename);
+
+        // Extract the part of the file name after the underscore
+        const namePart = filename.split('_')[1];
+
+        // Create a new unique file name
+        const newFilename = `${namePart}${extension}`;
+
+        fs.readFile(filePath, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({data, newFilename});
+            }
+        });
+    });
+};
+export const getUserDetails = (username) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT Username, ImmagineProfilo, Token, Mail, Password
+                     FROM account
+                     WHERE Username = ?`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (result.length === 0) {
+                reject({message: "User does not exist"});
+            }
+
+            let user = result[0];
+            let imagePath = `./images/${user.ImmagineProfilo}`;
+            user.ImmagineProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
+
+            const sqlFriends = `SELECT COUNT(*) as numFriends
+                                FROM amicizia
+                                WHERE (IdAccount1 = ? OR IdAccount2 = ?)
+                                  AND Stato = 1`;
+            db.query(sqlFriends, [username, username], (err, result) => {
+                if (err) {
+                    reject(err);
+                }
+
+                user.numFriends = result[0].numFriends;
+                resolve(user);
+            });
+        });
+    });
+};
+
+export const getChatFileMessages = (chatId) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT *
+                     FROM messaggio
+                     WHERE IdChat = ?
+                       AND Path IS NOT NULL`;
+        db.query(sql, [chatId], (err, dbMessages) => {
+            if (err) {
+                reject(err);
+            } else {
+                // Map the database messages to the new format
+                dbMessages = dbMessages.map(message => ({
+                    autore: message.IdAutore,
+                    path: message.Path,
+                    dataInvio: message.Data_invio,
+                    oraInvio: message.Ora_invio
+                }));
+                resolve(dbMessages);
+            }
+        });
+    });
+};

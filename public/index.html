@@ -33,6 +33,7 @@
     />
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/TextPlugin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <link rel="stylesheet" href="./style.css"/>
 
@@ -282,7 +283,7 @@ close
                     </div>
                     <div class="col-auto">
                         <button class="btn btn-dark align-middle btn-lg" data-bs-toggle="modal"
-                                data-bs-target="#modalProfilo">
+                                data-bs-target="#modalProfilo" id="buttonProfilo">
             <span class="material-symbols-rounded align-middle">
                 settings
             </span>
@@ -299,13 +300,15 @@ close
                             <input class="form-control me-2 form-ricerca mx-auto align-self-center border-0"
                                    type="search"
                                    placeholder="Search" aria-label="Search">
-                            <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button">
+                            <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button"
+                                    id="buttonChat" disabled>
                                 <span class="material-symbols-rounded align-middle">
 chat_bubble
 </span>
                             </button>
 
-                            <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button">
+                            <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button"
+                                    id="buttonFile">
                                 <span class="material-symbols-rounded">
 folder
 </span>
@@ -324,9 +327,13 @@ folder_data
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card-full-page">
+                            <div id="fileSection" class="d-none">
+                                <div class="container">
+                                    <div class="row row-cols-1 row-cols-md-3 g-4 mt-2" id="cardFileSection">
+                                    </div>
+                                </div>
+                            </div>
                             <ul class="list-unstyled text-white" id="messages">
-
-
                             </ul>
                         </div>
                     </div>

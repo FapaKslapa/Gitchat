@@ -205,3 +205,15 @@ export async function getUserDetails(username) {
     console.log(data);
     return data;
 }
+
+/**
+ * Funzione per recuperare tutti i messaggi di una chat che contengono dei file.
+ * @param {string} chatId - L'ID della chat.
+ */
+export async function getChatFileMessages(chatId) {
+    const response = await fetch(`/chat/${chatId}/file-messages`);
+    const data = await response.json();
+    console.log(`Messaggi della chat ${chatId} che contengono dei file:`);
+    console.log(data);
+    return data;
+}
