@@ -27,10 +27,13 @@ import {
     rejectFriendship,
     updateMessage
 } from "./server/database.js";
+import fetch from 'node-fetch';
 
 const require = createRequire(import.meta.url);
+
 const mysql = require("mysql2");
 const dbConfig = require("./asset/conf.json");
+const gitConfig = require("./asset/githubConf.json")
 // Crea una connessione al database
 const db = mysql.createConnection(dbConfig);
 const http = require("http");
@@ -328,4 +331,52 @@ app.get("/chat/:id/file-messages", async (req, res) => {
             message: "Could not get the file messages. " + err,
         });
     }
+});
+
+app.post('/github/login', (req, res) => {
+    const client_id = gitConfig.client_id;
+    const redirect_uri = 'http://localhost:3000/github/callback';
+    const scope = 'repo';
+    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}`;
+    res.json({url: url});
+});
+
+app.get('/github/callback', async (req, res) => {
+    const code = req.query.code;
+    const client_id = gitConfig.client_id;
+    const client_secret = gitConfig.client_secret;
+    const redirect_uri = 'http://localhost:3000/github/callback';
+
+    // Scambia il codice di autorizzazione con un token di accesso
+    const response = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            client_id,
+            client_secret,
+            code,
+            redirect_uri,
+        }),
+    });
+
+    const data = await response.text();
+    const params = new URLSearchParams(data);
+    const access_token = params.get('access_token');
+
+    // Utilizza il token di accesso per fare richieste autenticate all'API di GitHub
+    const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+            Authorization: `token ${access_token}`,
+        },
+    });
+
+    const userData = await userResponse.json();
+    console.log(userData);
+    // Adesso hai accesso ai dati dell'utente e puoi salvarli nel database
+    // ...
+
+    // Reindirizza l'utente alla tua applicazione
+    res.redirect('http://localhost:3000/index.html');
 });

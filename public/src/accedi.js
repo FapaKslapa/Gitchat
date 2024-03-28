@@ -37,3 +37,13 @@ document.addEventListener("DOMContentLoaded", function () {
         ease: "power1.inOut" // Easing per un movimento più fluido
     });
 });
+
+document.getElementById('accediGithub').addEventListener('click', function () {
+    // Invia una richiesta al server per iniziare il flusso di autorizzazione OAuth
+    fetch('/github/login', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            window.location.href = data.url;
+        })
+        .catch(error => console.error('Error:', error));
+});
