@@ -409,6 +409,32 @@ export const registerUser = (mail, username, password) => {
     });
 };
 
+export const registerUserGithub = (username,token) => {
+    return new Promise((resolve, reject)=>{
+        // Check if the username is unique
+        const checkUsernameSql = `SELECT *
+                                  FROM account
+                                  WHERE Username = ?`;
+        db.query(checkUsernameSql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (result.length > 0) {
+                reject({message: "Username already in use"});
+            }
+
+            const insertSql=`INSERT INTO account(Username, Token) VALUES (?, ?)`;
+            db.query(insertSql, [username, token], (err) => {
+                if(err){
+                    reject(err);
+                }else{
+                    resolve("Registration successful")
+                }
+            })
+        });
+    })
+}
 
 export const getUnacceptedFriendships = (username) => {
     return new Promise((resolve, reject) => {

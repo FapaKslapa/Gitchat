@@ -24,6 +24,7 @@ import {
     getUserDetails,
     loginUser,
     registerUser,
+    registerUserGithub,
     rejectFriendship,
     updateMessage
 } from "./server/database.js";
@@ -333,11 +334,28 @@ app.get("/chat/:id/file-messages", async (req, res) => {
     }
 });
 
-app.post('/github/login', (req, res) => {
+app.get('/github/login', (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = 'http://localhost:3000/github/callback';
     const scope = 'repo';
-    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}`;
+    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=login`;
+    res.json({url: url});
+});
+
+app.get('/github/register', (req,res) => {
+    const client_id = gitConfig.client_id;
+    const redirect_uri = 'http://localhost:3000/github/callback';
+    const scope = 'repo';
+    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=register`;
+    res.json({url: url});
+})
+
+app.get('/github/connect/:username', (req,res) => {
+    const client_id = gitConfig.client_id;
+    const redirect_uri = 'http://localhost:3000/github/callback';
+    const scope = 'repo';
+    const state = req.params.username;
+    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=${state}`;
     res.json({url: url});
 });
 
@@ -376,7 +394,15 @@ app.get('/github/callback', async (req, res) => {
     console.log(userData);
     // Adesso hai accesso ai dati dell'utente e puoi salvarli nel database
     // ...
+    const state = params.get('state')
+    if(state === "login"){
 
+    }else if(state === "register"){
+        await registerUserGithub(userData.login, access_token);
+        
+    }else{
+
+    }
     // Reindirizza l'utente alla tua applicazione
-    res.redirect('http://localhost:3000/index.html');
+    res.json({url: 'http://localhost:3000/index.html'});
 });
