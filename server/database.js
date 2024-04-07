@@ -1,6 +1,6 @@
 import {createRequire} from "module";
 import fs from 'fs';
-import path from "path";
+import path, { resolve } from "path";
 
 const require = createRequire(import.meta.url);
 const {v4: uuidv4} = require("uuid");
@@ -361,6 +361,22 @@ export const loginUser = (username, password) => {
     });
 };
 
+export const loginUserGithub = (username) => {
+    return new Promise((resolve, reject)=>{
+        const sql = `SELECT Username FROM account WHERE UsernameGithub = ?`;
+        db.query(sql, [username], (err, result) => {
+            if(err) {
+                reject(err);
+            } else if(result.length === 0){
+                reject({ message: "User not found" });
+            } else {
+                console.log(result)
+                resolve(result);
+            }
+        });
+    });
+}
+
 export const registerUser = (mail, username, password) => {
     return new Promise((resolve, reject) => {
         // Check if all fields are provided
@@ -409,8 +425,13 @@ export const registerUser = (mail, username, password) => {
     });
 };
 
-export const registerUserGithub = (username,token) => {
+export const registerUserGithub = (username, password) => {
     return new Promise((resolve, reject)=>{
+        // Check if all fields are provided
+        if (!username || !password) {
+            reject({message: "All fields must be provided"});
+        }
+
         // Check if the username is unique
         const checkUsernameSql = `SELECT *
                                   FROM account
@@ -424,14 +445,15 @@ export const registerUserGithub = (username,token) => {
                 reject({message: "Username already in use"});
             }
 
-            const insertSql=`INSERT INTO account(Username, Token) VALUES (?, ?)`;
-            db.query(insertSql, [username, token], (err) => {
-                if(err){
+            // If the email is unique, proceed with the registration
+            const sql = `INSERT INTO account (Username, Password) VALUES (?, ?)`;
+            db.query(sql, [mail, username, password], (err) => {
+                if (err) {
                     reject(err);
-                }else{
-                    resolve("Registration successful")
+                } else {
+                    resolve({message: "Registration successful"});
                 }
-            })
+            });
         });
     })
 }
@@ -599,7 +621,7 @@ export const downloadFile = (room, filename) => {
 };
 export const getUserDetails = (username) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT Username, ImmagineProfilo, Token, Mail, Password
+        const sql = `SELECT Username, ImmagineProfilo, UsernameGithub, Mail, Password
                      FROM account
                      WHERE Username = ?`;
         db.query(sql, [username], (err, result) => {
@@ -653,3 +675,66 @@ export const getChatFileMessages = (chatId) => {
         });
     });
 };
+
+export const addGitUsernameToUser = (username, usernameGit) =>{
+    return new Promise((resolve, reject)=>{
+        const getSql = `SELECT Username FROM account_github WHERE Username = ?`;
+        db.query(getSql, [usernameGit], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length > 0){
+                reject({ message: "Username already in use"});
+            }else{
+                const getSql2 = `SELECT UsernameGithub FROM account WHERE UsernameGithub = ?`;
+                db.query(getSql2, [usernameGit], (err, result) => {
+                    if(err){
+                        reject(err);
+                    }else if(result.length > 0){
+                        reject({ message: "Username already in use"});
+                    }else{
+                        const setSql = `INSERT INTO account_github(Username) VALUES (?)`;
+                        db.query(setSql, [usernameGit], (err) => {
+                            if(err){
+                                reject(err);
+                            }else{
+                                const setSql2 = `UPDATE account SET UsernameGithub = ? WHERE Username = ?`;
+                                db.query(setSql2, [usernameGit, username], (err) => {
+                                    if(err){
+                                        reject(err);
+                                    }else{
+                                        resolve({ message: "Username added succesfully"});
+                                    }
+                                })
+                            }
+                        })
+                    }
+                })
+            }
+        })
+    })
+}
+
+export const addTokenToUser = (username, token) => {
+    return new Promise((resolve, reject) => {
+        const getSql = `SELECT Token FROM account_github WHERE Token = ?`;
+        db.query(getSql, [token], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length > 0){
+                reject({message: "Token already inserted"})
+            }
+            console.log("token: "+token);
+            console.log("usernaem: "+username)
+
+            const insertSql = `UPDATE account_github SET Token = ? WHERE Username = ?`;
+            db.query(insertSql, [token, username], (err)=>{
+                if(err){
+                    reject(err);
+                }else{
+                    resolve({message:"Token inserted successfully"})
+                }
+            });
+        })
+        
+    });
+}

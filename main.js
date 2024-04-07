@@ -5,7 +5,9 @@ import {
     acceptFriendship,
     addChatParticipants,
     addFriendship,
+    addGitUsernameToUser,
     addParticipantsToChat,
+    addTokenToUser,
     convertImagesToBase64,
     createChat,
     createMessage,
@@ -23,6 +25,7 @@ import {
     getUnacceptedFriendships,
     getUserDetails,
     loginUser,
+    loginUserGithub,
     registerUser,
     registerUserGithub,
     rejectFriendship,
@@ -364,6 +367,7 @@ app.get('/github/callback', async (req, res) => {
     const client_id = gitConfig.client_id;
     const client_secret = gitConfig.client_secret;
     const redirect_uri = 'http://localhost:3000/github/callback';
+    const state = req.query.state;
 
     // Scambia il codice di autorizzazione con un token di accesso
     const response = await fetch('https://github.com/login/oauth/access_token', {
@@ -391,18 +395,43 @@ app.get('/github/callback', async (req, res) => {
     });
 
     const userData = await userResponse.json();
-    console.log(userData);
+    //console.log(userData);
     // Adesso hai accesso ai dati dell'utente e puoi salvarli nel database
     // ...
-    const state = params.get('state')
+    console.log("state: "+state)
     if(state === "login"){
-
+        try{
+            let username = await loginUserGithub(userData.login);
+            username = username[0].Username;
+            addTokenToUser(userData.login, access_token).then(() => {
+                res.redirect(`http://localhost:3000/index.html?login=${username}`);
+            }).catch((err) => {
+                res.redirect(`http://localhost:3000/index.html?login=${username}&token=false`);
+            });
+        }catch(err){
+            console.log(err)
+            res.redirect(`http://localhost:3000/accedi.html?login=failed`);
+        }
     }else if(state === "register"){
         await registerUserGithub(userData.login, access_token);
-        
+        res.redirect(`http://localhost:3000/register.html?action=register&username=${userData.login}`);
     }else{
+        addGitUsernameToUser(state, userData.login).then((msg) => {
+            console.log(msg);
+            addTokenToUser(state, access_token).then((msg) => {
+                console.log(msg);
+                res.redirect('http://localhost:3000/index.html');
+            }).catch((err) => {
+                console.log(err);
+                res.redirect('http://localhost:3000/index.html?username=failed');
+            })
+        }).catch((err) => {
+            console.log(err);
+            res.redirect('http://localhost:3000/index.html?token=failed');
+        })
 
+        
     }
     // Reindirizza l'utente alla tua applicazione
-    res.json({url: 'http://localhost:3000/index.html'});
+    //res.json({url: 'http://localhost:3000/index.html'});
 });

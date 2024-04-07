@@ -41,9 +41,9 @@ document.addEventListener("DOMContentLoaded", function () {
 document.getElementById('accediGithub').addEventListener('click', function () {
     // Invia una richiesta al server per iniziare il flusso di autorizzazione OAuth
     fetch('/github/login', {method: 'GET'})
-        .then(response => response.json())
-        .then(data => {
-            window.location.href = data.url;
-        })
-        .catch(error => console.error('Error:', error));
+    .then(response => response.json())
+    .then(data => {
+        window.location.href = data.url;
+    })
+    .catch(error => console.error('Error:', error));
 });

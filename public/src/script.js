@@ -47,7 +47,9 @@ const buttonFile = document.getElementById("buttonFile");
 const buttonChat = document.getElementById("buttonChat");
 const fileSection = document.getElementById("fileSection");
 const cardFileSection = document.getElementById("cardFileSection");
+const buttonConnect = document.getElementById("connectToGH");
 const eventHandlers = {};
+const params = new URLSearchParams(new URL(document.location).search);
 let chatSelezionata = "";
 let chats = [];
 let mieChat = [];
@@ -585,6 +587,14 @@ const renderPartecipanti = (partecipanti) => {
         });
     });
 }
+
+if(params.has("login")){
+    if(params.get("login")!="failed"){
+        sessionStorage.setItem("username", params.get("login"));
+        sessionStorage.setItem("password", "logged w/ github");
+    }
+}
+
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "./accedi.html";
 } else {
@@ -729,3 +739,12 @@ buttonChat.onclick = () => {
     gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
     fileSection.classList.add('d-none');
 };
+buttonConnect.onclick = () => {
+    fetch("/github/connect/"+username, {method: 'GET'})
+    .then(response => response.json())
+    .then(data => {
+        console.log(data)
+        window.location.href = data.url;
+    })
+    .catch(error => console.error('Error:', error));
+}
