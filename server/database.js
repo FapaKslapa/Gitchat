@@ -1,6 +1,6 @@
 import {createRequire} from "module";
 import fs from 'fs';
-import path, { resolve } from "path";
+import path, {resolve} from "path";
 
 const require = createRequire(import.meta.url);
 const {v4: uuidv4} = require("uuid");
@@ -362,13 +362,15 @@ export const loginUser = (username, password) => {
 };
 
 export const loginUserGithub = (username) => {
-    return new Promise((resolve, reject)=>{
-        const sql = `SELECT Username FROM account WHERE UsernameGithub = ?`;
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT Username
+                     FROM account
+                     WHERE UsernameGithub = ?`;
         db.query(sql, [username], (err, result) => {
-            if(err) {
+            if (err) {
                 reject(err);
-            } else if(result.length === 0){
-                reject({ message: "User not found" });
+            } else if (result.length === 0) {
+                reject({message: "User not found"});
             } else {
                 console.log(result)
                 resolve(result);
@@ -426,7 +428,7 @@ export const registerUser = (mail, username, password) => {
 };
 
 export const registerUserGithub = (username, password) => {
-    return new Promise((resolve, reject)=>{
+    return new Promise((resolve, reject) => {
         // Check if all fields are provided
         if (!username || !password) {
             reject({message: "All fields must be provided"});
@@ -446,7 +448,8 @@ export const registerUserGithub = (username, password) => {
             }
 
             // If the email is unique, proceed with the registration
-            const sql = `INSERT INTO account (Username, Password) VALUES (?, ?)`;
+            const sql = `INSERT INTO account (Username, Password)
+                         VALUES (?, ?)`;
             db.query(sql, [mail, username, password], (err) => {
                 if (err) {
                     reject(err);
@@ -676,33 +679,40 @@ export const getChatFileMessages = (chatId) => {
     });
 };
 
-export const addGitUsernameToUser = (username, usernameGit) =>{
-    return new Promise((resolve, reject)=>{
-        const getSql = `SELECT Username FROM account_github WHERE Username = ?`;
+export const addGitUsernameToUser = (username, usernameGit) => {
+    return new Promise((resolve, reject) => {
+        const getSql = `SELECT Username
+                        FROM account_github
+                        WHERE Username = ?`;
         db.query(getSql, [usernameGit], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length > 0){
-                reject({ message: "Username already in use"});
-            }else{
-                const getSql2 = `SELECT UsernameGithub FROM account WHERE UsernameGithub = ?`;
+            } else if (result.length > 0) {
+                reject({message: "Username already in use"});
+            } else {
+                const getSql2 = `SELECT UsernameGithub
+                                 FROM account
+                                 WHERE UsernameGithub = ?`;
                 db.query(getSql2, [usernameGit], (err, result) => {
-                    if(err){
+                    if (err) {
                         reject(err);
-                    }else if(result.length > 0){
-                        reject({ message: "Username already in use"});
-                    }else{
-                        const setSql = `INSERT INTO account_github(Username) VALUES (?)`;
+                    } else if (result.length > 0) {
+                        reject({message: "Username already in use"});
+                    } else {
+                        const setSql = `INSERT INTO account_github(Username)
+                                        VALUES (?)`;
                         db.query(setSql, [usernameGit], (err) => {
-                            if(err){
+                            if (err) {
                                 reject(err);
-                            }else{
-                                const setSql2 = `UPDATE account SET UsernameGithub = ? WHERE Username = ?`;
+                            } else {
+                                const setSql2 = `UPDATE account
+                                                 SET UsernameGithub = ?
+                                                 WHERE Username = ?`;
                                 db.query(setSql2, [usernameGit, username], (err) => {
-                                    if(err){
+                                    if (err) {
                                         reject(err);
-                                    }else{
-                                        resolve({ message: "Username added succesfully"});
+                                    } else {
+                                        resolve({message: "Username added succesfully"});
                                     }
                                 })
                             }
@@ -716,40 +726,116 @@ export const addGitUsernameToUser = (username, usernameGit) =>{
 
 export const addTokenToUser = (username, token) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT Token FROM account_github WHERE Token = ?`;
+        const getSql = `SELECT Token
+                        FROM account_github
+                        WHERE Token = ?`;
         db.query(getSql, [token], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length > 0){
+            } else if (result.length > 0) {
                 reject({message: "Token already inserted"})
             }
-            console.log("token: "+token);
-            console.log("usernaem: "+username)
+            console.log("token: " + token);
+            console.log("usernaem: " + username)
 
-            const insertSql = `UPDATE account_github SET Token = ? WHERE Username = ?`;
-            db.query(insertSql, [token, username], (err)=>{
-                if(err){
+            const insertSql = `UPDATE account_github
+                               SET Token = ?
+                               WHERE Username = ?`;
+            db.query(insertSql, [token, username], (err) => {
+                if (err) {
                     reject(err);
-                }else{
-                    resolve({message:"Token inserted successfully"})
+                } else {
+                    resolve({message: "Token inserted successfully"})
                 }
             });
         })
-        
+
     });
 }
 
 export const getUserToken = (username) => {
-  return new Promise((resolve, reject) => {
-    const sql = `SELECT account_github.Token FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ?`;
-    db.query(sql, [username], (err, result) => {
-      if (err) {
-        reject(err);
-      } else if(result.length === 0){
-        reject({ message: "User not found"});
-      } else {
-        resolve(result);
-      }
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT account_github.Token
+                     FROM account
+                              JOIN account_github ON account.UsernameGithub = account_github.Username
+                     WHERE account.Username = ?`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            } else if (result.length === 0) {
+                reject({message: "User not found"});
+            } else {
+                resolve(result);
+            }
+        });
     });
-  });
+};
+
+export const deleteChat = (chatId) => {
+    return new Promise((resolve, reject) => {
+        // Start the transaction
+        db.beginTransaction((err) => {
+            if (err) {
+                reject(err);
+            }
+
+            // Delete the chat from the `chat` table
+            const sqlDeleteChat = `DELETE
+                                   FROM chat
+                                   WHERE Id = ?`;
+            db.query(sqlDeleteChat, [chatId], (err) => {
+                if (err) {
+                    db.rollback(() => {
+                        reject(err);
+                    });
+                } else {
+                    // Delete the participants of the chat from the `partecipazione` table
+                    const sqlDeleteParticipants = `DELETE
+                                                   FROM partecipazione
+                                                   WHERE IdChat = ?`;
+                    db.query(sqlDeleteParticipants, [chatId], (err) => {
+                        if (err) {
+                            db.rollback(() => {
+                                reject(err);
+                            });
+                        } else {
+                            // Delete the messages of the chat from the `messaggio` table
+                            const sqlDeleteMessages = `DELETE
+                                                       FROM messaggio
+                                                       WHERE IdChat = ?`;
+                            db.query(sqlDeleteMessages, [chatId], (err) => {
+                                if (err) {
+                                    db.rollback(() => {
+                                        reject(err);
+                                    });
+                                } else {
+                                    // Delete the repository connected to the chat from the `repository` table
+                                    const sqlDeleteRepository = `DELETE
+                                                                 FROM repository
+                                                                 WHERE IdChat = ?`;
+                                    db.query(sqlDeleteRepository, [chatId], (err) => {
+                                        if (err) {
+                                            db.rollback(() => {
+                                                reject(err);
+                                            });
+                                        } else {
+                                            db.commit((err) => {
+                                                if (err) {
+                                                    db.rollback(() => {
+                                                        reject(err);
+                                                    });
+                                                } else {
+                                                    resolve({message: "Chat deleted successfully"});
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
 };

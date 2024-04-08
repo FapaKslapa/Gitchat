@@ -10,7 +10,7 @@ import {
     addTokenToUser,
     convertImagesToBase64,
     createChat,
-    createMessage,
+    createMessage, deleteChat,
     deleteChatParticipant,
     deleteChatParticipants, deleteMessage,
     downloadFile,
@@ -32,7 +32,7 @@ import {
     rejectFriendship,
     updateMessage
 } from "./server/database.js";
-import { createRepo, getFiles, sendInvite, acceptInviteToRepo } from "./server/github.js";
+import {createRepo, getFiles, sendInvite, acceptInviteToRepo} from "./server/github.js";
 import fetch from 'node-fetch';
 
 const require = createRequire(import.meta.url);
@@ -310,6 +310,7 @@ app.get("/user/:username/details", async (req, res) => {
     }
 });
 
+
 app.get("/chat/:id/file-messages", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -336,6 +337,16 @@ app.get("/chat/:id/file-messages", async (req, res) => {
         res.status(500).send({
             message: "Could not get the file messages. " + err,
         });
+    }
+});
+
+app.delete("/chat/:id", async (req, res) => {
+    try {
+        const chatId = req.params.id;
+        const result = await deleteChat(chatId);
+        res.json(result);
+    } catch (err) {
+        res.json({message: "Errore"});
     }
 });
 

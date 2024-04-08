@@ -217,3 +217,21 @@ export async function getChatFileMessages(chatId) {
     console.log(data);
     return data;
 }
+
+/**
+ * Funzione per eliminare una chat.
+ * @param {string} chatId - L'ID della chat.
+ */
+export async function deleteChatRoom(chatId) {
+    try {
+        const response = await fetch(`/chat/${chatId}`, {
+            method: "DELETE"
+        });
+        const data = await response.json();
+        console.log(data.message);
+        return data;
+    } catch (err) {
+        console.error("Errore", err);
+        return {message: "Errore"};
+    }
+}

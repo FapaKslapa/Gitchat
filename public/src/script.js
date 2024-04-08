@@ -12,7 +12,8 @@ import {
     downloadFile,
     getUserOwnedChats,
     getUserDetails,
-    getChatFileMessages
+    getChatFileMessages,
+    deleteChatRoom
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -48,6 +49,7 @@ const buttonChat = document.getElementById("buttonChat");
 const fileSection = document.getElementById("fileSection");
 const cardFileSection = document.getElementById("cardFileSection");
 const buttonConnect = document.getElementById("connectToGH");
+const deleteChat = document.getElementById("deleteChat");
 const eventHandlers = {};
 const params = new URLSearchParams(new URL(document.location).search);
 let chatSelezionata = "";
@@ -626,6 +628,17 @@ newFriend.onclick = async () => {
 newChat.onclick = async () => {
     const data = getSelectedFriends();
     await createChat(nomeChat.value, data, username);
+    mieChat = await getUserOwnedChats(username);
+    chats = await getUserChats(username);
+    listChat.innerHTML = chats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(chats);
 }
 newChatButton.onclick = async () => {
     const data = await getUserFriends(username);
@@ -707,6 +720,21 @@ deleteSelectFile.onclick = () => {
         }
     });
 };
+deleteChat.onclick = async () => {
+    await deleteChatRoom(room);
+    mieChat = await getUserOwnedChats(username);
+    chats = await getUserChats(username);
+    listChat.innerHTML = chats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(chats);
+
+}
 buttonProfilo.onclick = () => {
     setProfile(user);
 }
@@ -765,5 +793,14 @@ popoverTriggerList.forEach(function (popoverTriggerEl) {
             sessionStorage.clear();
             window.location.href = "./accedi.html";
         }
+
+        // Aggiungi un listener per l'evento click del documento
+        document.addEventListener('click', function (e) {
+            // Se il click non è sul popover o sui suoi trigger, nascondi il popover
+            if (!popoverTriggerEl.contains(e.target)) {
+                let popover = bootstrap.Popover.getInstance(popoverTriggerEl);
+                popover.hide();
+            }
+        });
     })
 })

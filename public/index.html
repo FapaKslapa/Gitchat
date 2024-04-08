@@ -76,7 +76,8 @@ close
                     </div>
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="submit" class="btn btn-primary btn-lg align-middle" id="newChat">Crea chat <span
+                    <button type="submit" class="btn btn-primary btn-lg align-middle" id="newChat"
+                            data-bs-dismiss="modal">Crea chat <span
                             class="material-symbols-rounded align-middle">
 forum
 </span></button>
@@ -137,6 +138,16 @@ close
 </span></button>
             </div>
             <div class="modal-body">
+                <div class="row justify-content-end">
+                    <div class="col-auto">
+                        <button type="button" id="deleteChat" class="btn btn-danger align-middle btn-lg"
+                                data-bs-dismiss="modal">Elimina chat
+                            <span
+                                    class="material-symbols-rounded align-middle">
+delete_forever
+</span></button>
+                    </div>
+                </div>
                 <div class="row">
                     <h5>Gestisci partecipanti</h5>
                     <div id="checkBoxGestisci">
