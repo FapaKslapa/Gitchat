@@ -414,3 +414,9 @@ a.article:hover {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+#avatar-container {
+    background: none;
+    border: none;
+    padding: 0;
+}

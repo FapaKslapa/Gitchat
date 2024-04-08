@@ -345,7 +345,7 @@ app.get('/github/login', (req, res) => {
     res.json({url: url});
 });
 
-app.get('/github/register', (req,res) => {
+app.get('/github/register', (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = 'http://localhost:3000/github/callback';
     const scope = 'repo';
@@ -353,7 +353,7 @@ app.get('/github/register', (req,res) => {
     res.json({url: url});
 })
 
-app.get('/github/connect/:username', (req,res) => {
+app.get('/github/connect/:username', (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = 'http://localhost:3000/github/callback';
     const scope = 'repo';
@@ -398,9 +398,9 @@ app.get('/github/callback', async (req, res) => {
     //console.log(userData);
     // Adesso hai accesso ai dati dell'utente e puoi salvarli nel database
     // ...
-    console.log("state: "+state)
-    if(state === "login"){
-        try{
+    console.log("state: " + state)
+    if (state === "login") {
+        try {
             let username = await loginUserGithub(userData.login);
             username = username[0].Username;
             addTokenToUser(userData.login, access_token).then(() => {
@@ -408,14 +408,14 @@ app.get('/github/callback', async (req, res) => {
             }).catch((err) => {
                 res.redirect(`http://localhost:3000/index.html?login=${username}&token=false`);
             });
-        }catch(err){
+        } catch (err) {
             console.log(err)
             res.redirect(`http://localhost:3000/accedi.html?login=failed`);
         }
-    }else if(state === "register"){
+    } else if (state === "register") {
         await registerUserGithub(userData.login, access_token);
         res.redirect(`http://localhost:3000/register.html?action=register&username=${userData.login}`);
-    }else{
+    } else {
         addGitUsernameToUser(state, userData.login).then((msg) => {
             console.log(msg);
             addTokenToUser(state, access_token).then((msg) => {
@@ -430,7 +430,7 @@ app.get('/github/callback', async (req, res) => {
             res.redirect('http://localhost:3000/index.html?token=failed');
         })
 
-        
+
     }
     // Reindirizza l'utente alla tua applicazione
     //res.json({url: 'http://localhost:3000/index.html'});

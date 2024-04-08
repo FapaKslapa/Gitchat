@@ -588,8 +588,8 @@ const renderPartecipanti = (partecipanti) => {
     });
 }
 
-if(params.has("login")){
-    if(params.get("login")!="failed"){
+if (params.has("login")) {
+    if (params.get("login") != "failed") {
         sessionStorage.setItem("username", params.get("login"));
         sessionStorage.setItem("password", "logged w/ github");
     }
@@ -740,11 +740,30 @@ buttonChat.onclick = () => {
     fileSection.classList.add('d-none');
 };
 buttonConnect.onclick = () => {
-    fetch("/github/connect/"+username, {method: 'GET'})
-    .then(response => response.json())
-    .then(data => {
-        console.log(data)
-        window.location.href = data.url;
-    })
-    .catch(error => console.error('Error:', error));
+    fetch("/github/connect/" + username, {method: 'GET'})
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+            window.location.href = data.url;
+        })
+        .catch(error => console.error('Error:', error));
 }
+
+let popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+let popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    return new bootstrap.Popover(popoverTriggerEl, {
+        sanitize: false
+    })
+})
+
+popoverTriggerList.forEach(function (popoverTriggerEl) {
+    popoverTriggerEl.addEventListener('shown.bs.popover', function () {
+        const logout = document.getElementById("logout");
+
+        logout.onclick = () => {
+            console.log("logout");
+            sessionStorage.clear();
+            window.location.href = "./accedi.html";
+        }
+    })
+})

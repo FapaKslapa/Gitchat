@@ -246,9 +246,14 @@ close
                                placeholder="Search" aria-label="Search">
                     </div>
                     <div class="col-auto">
-                        <img src="./images/Default.jpg" alt="avatar"
-                             class="rounded-circle d-flex align-self-start shadow-1-strong border border-2 border-light"
-                             width="50">
+                        <button class="btn" id="avatar-container" type="button" data-bs-toggle="popover" title=""
+                                data-bs-content="<button id='logout' class='btn btn-outline-danger btn-sm align-middle'>Logout <span class='material-symbols-rounded align-middle'>logout</span></button>"
+                                data-bs-html="true">
+                            <img src="./images/Default.jpg" alt="avatar"
+                                 class="rounded-circle d-flex align-self-start shadow-1-strong border border-2 border-light"
+                                 width="50" id="avatar"
+                            >
+                        </button>
                     </div>
                 </div>
                 <div class="row mt-5">
