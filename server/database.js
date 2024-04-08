@@ -741,7 +741,7 @@ export const addTokenToUser = (username, token) => {
 
 export const getUserToken = (username) => {
   return new Promise((resolve, reject) => {
-    const sql = `SELECT account_github.Token FROM account JOIN account_github ON account.UsernameGithub = account_gihtub.Username WHERE account.Username = ?`;
+    const sql = `SELECT account_github.Token FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ?`;
     db.query(sql, [username], (err, result) => {
       if (err) {
         reject(err);

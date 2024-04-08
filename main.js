@@ -24,6 +24,7 @@ import {
     getOwnedChats,
     getUnacceptedFriendships,
     getUserDetails,
+    getUserToken,
     loginUser,
     loginUserGithub,
     registerUser,
@@ -31,6 +32,7 @@ import {
     rejectFriendship,
     updateMessage
 } from "./server/database.js";
+import { createRepo, getFiles, sendInvite, acceptInviteToRepo } from "./server/github.js";
 import fetch from 'node-fetch';
 
 const require = createRequire(import.meta.url);
@@ -435,3 +437,33 @@ app.get('/github/callback', async (req, res) => {
     // Reindirizza l'utente alla tua applicazione
     //res.json({url: 'http://localhost:3000/index.html'});
 });
+
+app.post('/github/createRepo', async (req, res) => {
+    const username = req.body.username;
+    const repoSpecs = req.body.repoSpecs;
+    const token1 = await getUserToken(username);
+    const token = token1[0].Token;
+    await createRepo(token, repoSpecs);
+});
+
+app.get('/github/content', async (req, res) => {
+    const token1 = await getUserToken("Mael");
+    const token = token1[0].Token;
+    getFiles(token, "maelGhezzi", "node");
+})
+
+app.post('/github/sendInvite', async (req, res) => {
+    const username = req.body.username;
+    const repo = req.body.repo;
+    const username2 = req.body.username2;
+    const token1 = await getUserToken(username);
+    const token = token1[0].Token;
+    sendInvite(token, "maelGhezzi", repo, username2);
+})
+
+app.post('/github/acceptInvite', async (req, res) => {
+    const username = req.body.username;
+    const token1 = await getUserToken(username);
+    const token = token1[0].Token;
+    acceptInviteToRepo(token, 250182506);
+})
