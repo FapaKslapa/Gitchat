@@ -8,7 +8,6 @@ const { Octokit, App } = require("octokit");
 //{ name: name, descr: descr, homepage: homepage }
 export const createRepo = async (token, repoSpecs) => {
   const octokit = new Octokit({ auth: token });
-  console.log("token: "+token)
   try {
     const githubResponse = await octokit.request("POST /user/repos", {
       name: repoSpecs.name,
@@ -19,7 +18,6 @@ export const createRepo = async (token, repoSpecs) => {
         "X-GitHub-Api-Version": "2022-11-28",
       },
     });
-    console.log(githubResponse.data.error);
     if (githubResponse.status == 201) {
       return { message: "Repository created successfully" };
     } else {
@@ -35,7 +33,8 @@ export const acceptInviteToRepo = async (token, invitationId) => {
     const octokit = new Octokit({
       auth: token,
     });
-
+    console.log("token: "+token)
+    console.log("invitation id: "+invitationId)
     const githubResponse = await octokit.request(
       `PATCH /user/repository_invitations/{invitation_id}`,
       {
@@ -69,7 +68,7 @@ export const sendInvite = async (token, owner, repo, user) => {
         },
       }
     );
-    console.log(githubResponse);
+    return githubResponse;
   } catch (error) {
     console.log(error);
   }
@@ -93,7 +92,6 @@ export const getFiles = async (token, owner, repo, path) => {
         accept: "application/vnd.github+json",
       },
     });
-    console.log(githubResponse)
     return githubResponse.data;
   } catch (error) {
     throw error;

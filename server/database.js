@@ -380,7 +380,6 @@ export const loginUserGithub = (username) => {
             } else if (result.length === 0) {
                 reject({message: "User not found"});
             } else {
-                console.log(result)
                 resolve(result);
             }
         });
@@ -743,8 +742,6 @@ export const addTokenToUser = (username, token) => {
             } else if (result.length > 0) {
                 reject({message: "Token already inserted"})
             }
-            console.log("token: " + token);
-            console.log("usernaem: " + username)
 
             const insertSql = `UPDATE account_github
                                SET Token = ?
@@ -766,8 +763,8 @@ export const getUserToken = (username) => {
         const sql = `SELECT account_github.Token
                      FROM account
                               JOIN account_github ON account.UsernameGithub = account_github.Username
-                     WHERE account.Username = ?`;
-        db.query(sql, [username], (err, result) => {
+                     WHERE account.Username = ? OR account.UsernameGithub = ?`;
+        db.query(sql, [username, username], (err, result) => {
             if (err) {
                 reject(err);
             } else if (result.length === 0) {
@@ -780,16 +777,15 @@ export const getUserToken = (username) => {
 };
 
 export const getGithubUsername = (username) => {
-    return new Promise((response, reject) => {
-        const sql = `SELECT account_github.Username FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ? OR account.UsernameGithub = ?`;
-        console.log(username);
-        db.query(sql, [username, username], (err, result) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT account_github.Username FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ?`;
+        db.query(sql, [username], (err, result) => {
             if(err){
                 reject(err);
             }else if(result.length == 0){
-                reject({ message: "User not found"});
+                reject({ message: "User not found" });
             }else{
-                resolve(result);
+                resolve(result[0].Username);
             }
         })
     })

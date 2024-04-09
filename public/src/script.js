@@ -821,7 +821,7 @@ buttonOpenCodespace.onclick = () => {
             }
         })
     }).then((res) => {
-        console.log(res);
+        console.log(res.json());
         fetch("/github/sendInvites/"+room, {
             method: "POST",
             headers: {
@@ -831,6 +831,8 @@ buttonOpenCodespace.onclick = () => {
                 username: username,
                 repo: "test1"
             })
+        }).then((res) => {
+            console.log(res.json())
         })
     })
     console.log("vadiocan")
