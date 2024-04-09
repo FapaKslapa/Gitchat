@@ -9,15 +9,18 @@ const { Octokit, App } = require("octokit");
 export const createRepo = async (token, repoSpecs) => {
   const octokit = new Octokit({ auth: token });
   try {
+    console.log("descr: "+repoSpecs.descr)
     const githubResponse = await octokit.request("POST /user/repos", {
       name: repoSpecs.name,
       description: repoSpecs.descr,
-      //homepage: repoSpecs.homepage,
+      private: repoSpecs.private,
+      auto_init: repoSpecs.auto_init,
       is_template: false,
       Headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
     });
+    console.log(githubResponse)
     if (githubResponse.status == 201) {
       return { message: "Repository created successfully" };
     } else {

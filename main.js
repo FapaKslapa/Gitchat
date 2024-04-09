@@ -483,7 +483,9 @@ app.post("/github/createRepo", async (req, res) => {
     const repoSpecs = req.body.repoSpecs;
     const token1 = await getUserToken(username);
     const token = token1[0].Token;
-    await createRepo(token, repoSpecs);
+    const ghRes = await createRepo(token, repoSpecs);
+    console.log("ghres")
+    console.log(ghRes)
     res.json({ message: "Repo created Succesfully" });
   } catch (error) {
     console.log(error.data.error);
@@ -509,11 +511,7 @@ app.post("/github/sendInvites/:id", async (req, res) => {
   const repo = req.body.repo;
   try {
     const users = await getChatParticipants(req.params.id);
-    console.log("arriva")
     const githubUsername = await getGithubUsername(username);
-    console.log("non arriva")
-    console.log("username: " + username + " repo: " + repo + " paricipants:");
-    console.log(users);
     const authUsers = [];
     users.forEach(element => {
       if (
@@ -523,9 +521,6 @@ app.post("/github/sendInvites/:id", async (req, res) => {
         authUsers.push(element.usernameGithub);
       }
     });
-    console.log("auth");
-    console.log(authUsers);
-    console.log("ghUsername: " + githubUsername);
     const token1 = await getUserToken(username);
     const token = token1[0].Token;
     const requests = [];
@@ -537,8 +532,6 @@ app.post("/github/sendInvites/:id", async (req, res) => {
         repo,
         authUsers[i]
       );
-      console.log("ghResponse")
-      console.log(githubResponse)
       requests.push(githubResponse.data.id);
     }
     console.log("arriva1");

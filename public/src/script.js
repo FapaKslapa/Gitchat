@@ -52,7 +52,9 @@ const fileSection = document.getElementById("fileSection");
 const cardFileSection = document.getElementById("cardFileSection");
 const buttonConnect = document.getElementById("connectToGH");
 const deleteChat = document.getElementById("deleteChat");
+const buttonRepository = document.getElementById("newRepository");
 const buttonOpenCodespace = document.getElementById("buttonGHCodespace");
+const modalRepository = new bootstrap.Modal('#modalRepository');
 const eventHandlers = {};
 const params = new URLSearchParams(new URL(document.location).search);
 let chatSelezionata = "";
@@ -593,6 +595,40 @@ const renderPartecipanti = (partecipanti) => {
     });
 }
 
+const connectRepository = (name, description, readme, priv) => {
+    const repoSpecs = {
+        name: name,
+        descr: description,
+        auto_init: readme,
+        private: priv
+    };
+
+    fetch("/github/createRepo",{
+        method: "POST",
+        headers: {
+            'content-type':"application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            repoSpecs: repoSpecs
+        })
+    }).then((res) => {
+        console.log(res.json());
+        fetch("/github/sendInvites/"+room, {
+            method: "POST",
+            headers: {
+                'content-type':"application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                repo: repoSpecs.name
+            })
+        }).then((res) => {
+            return res.json();
+        })
+    })
+}
+
 if (params.has("login")) {
     if (params.get("login") != "failed") {
         sessionStorage.setItem("username", params.get("login"));
@@ -807,34 +843,26 @@ buttonConnect.onclick = () => {
         .catch(error => console.error('Error:', error));
 }
 
+buttonRepository.onclick = () => {
+    const name = document.getElementById("nomeRepository");
+    const descr = document.getElementById("descrizioneRepository");
+    const readme = document.getElementById("readMe");
+    const priv = document.getElementById("priv");
+    console.log("c'è")
+    name.classList.add("border-light");
+    name.classList.remove("border-danger");
+    if(name.value!=""){
+        const result = connectRepository(name.value, descr.value, readme.checked, priv.checked)
+        console.log(result);
+        modalRepository.hide();
+    }else{
+        name.classList.add("border-danger");
+        name.classList.remove("border-light");
+    }
+}
+
 buttonOpenCodespace.onclick = () => {
-    fetch("/github/createRepo",{
-        method: "POST",
-        headers: {
-            'content-type':"application/json"
-        },
-        body: JSON.stringify({
-            username: username,
-            repoSpecs: {
-                name: "test1",
-                descr: "description for test1"
-            }
-        })
-    }).then((res) => {
-        console.log(res.json());
-        fetch("/github/sendInvites/"+room, {
-            method: "POST",
-            headers: {
-                'content-type':"application/json"
-            },
-            body: JSON.stringify({
-                username: username,
-                repo: "test1"
-            })
-        }).then((res) => {
-            console.log(res.json())
-        })
-    })
+    
     console.log("vadiocan")
     /*fetch("/github/content", {
         method: "GET",
