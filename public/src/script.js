@@ -45,7 +45,6 @@ const passwordUtenteProfilo = document.getElementById("passwordUtenteProfilo");
 const numeroAmiciProfilo = document.getElementById("numeroAmiciProfilo");
 const imgUtenteProfilo = document.getElementById("imgUtenteProfilo");
 const buttonFile = document.getElementById("buttonFile");
-const buttonGH = document.getElementById("buttonGH");
 const buttonGitHub = document.getElementById("buttonGitHub");
 const githubSection = document.getElementById("githubSection");
 const buttonChat = document.getElementById("buttonChat");
@@ -53,6 +52,7 @@ const fileSection = document.getElementById("fileSection");
 const cardFileSection = document.getElementById("cardFileSection");
 const buttonConnect = document.getElementById("connectToGH");
 const deleteChat = document.getElementById("deleteChat");
+const buttonOpenCodespace = document.getElementById("buttonGHCodespace");
 const eventHandlers = {};
 const params = new URLSearchParams(new URL(document.location).search);
 let chatSelezionata = "";
@@ -805,6 +805,41 @@ buttonConnect.onclick = () => {
             window.location.href = data.url;
         })
         .catch(error => console.error('Error:', error));
+}
+
+buttonOpenCodespace.onclick = () => {
+    fetch("/github/createRepo",{
+        method: "POST",
+        headers: {
+            'content-type':"application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            repoSpecs: {
+                name: "test1",
+                descr: "description for test1"
+            }
+        })
+    }).then((res) => {
+        console.log(res);
+        fetch("/github/sendInvites/"+room, {
+            method: "POST",
+            headers: {
+                'content-type':"application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                repo: "test1"
+            })
+        })
+    })
+    console.log("vadiocan")
+    /*fetch("/github/content", {
+        method: "GET",
+        headers: {
+            'content-type': "Application/json"
+        }
+    })*/
 }
 
 let popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))

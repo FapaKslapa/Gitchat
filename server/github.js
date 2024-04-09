@@ -8,6 +8,7 @@ const { Octokit, App } = require("octokit");
 //{ name: name, descr: descr, homepage: homepage }
 export const createRepo = async (token, repoSpecs) => {
   const octokit = new Octokit({ auth: token });
+  console.log("token: "+token)
   try {
     const githubResponse = await octokit.request("POST /user/repos", {
       name: repoSpecs.name,
@@ -15,9 +16,10 @@ export const createRepo = async (token, repoSpecs) => {
       //homepage: repoSpecs.homepage,
       is_template: false,
       Headers: {
-        "X-GitHub-Api-Version": "2022-11-28"
-      }
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
     });
+    console.log(githubResponse.data.error);
     if (githubResponse.status == 201) {
       return { message: "Repository created successfully" };
     } else {
@@ -31,7 +33,7 @@ export const createRepo = async (token, repoSpecs) => {
 export const acceptInviteToRepo = async (token, invitationId) => {
   try {
     const octokit = new Octokit({
-      auth: token
+      auth: token,
     });
 
     const githubResponse = await octokit.request(
@@ -39,12 +41,12 @@ export const acceptInviteToRepo = async (token, invitationId) => {
       {
         invitation_id: invitationId,
         headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
       }
     );
-    console.log("githubResponse")
-    console.log(githubResponse)
+    console.log("githubResponse");
+    console.log(githubResponse);
   } catch (error) {
     console.log(error);
   }
@@ -53,7 +55,7 @@ export const acceptInviteToRepo = async (token, invitationId) => {
 export const sendInvite = async (token, owner, repo, user) => {
   try {
     const octokit = new Octokit({
-      auth: token
+      auth: token,
     });
 
     const githubResponse = await octokit.request(
@@ -63,13 +65,13 @@ export const sendInvite = async (token, owner, repo, user) => {
         repo: repo,
         username: user,
         headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
       }
     );
-    console.log(githubResponse)
+    console.log(githubResponse);
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 };
 
@@ -88,11 +90,31 @@ export const getFiles = async (token, owner, repo, path) => {
       path: path,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
-        accept: "application/vnd.github+json"
-      }
+        accept: "application/vnd.github+json",
+      },
     });
+    console.log(githubResponse)
     return githubResponse.data;
   } catch (error) {
     throw error;
+  }
+};
+
+export const createCodespace = async (token, owner, repo) => {
+  try {
+    const octokit = new Octokit({ auth: token });
+    const githubResponse = await octokit.request(
+      `POST /repos/{owner}/{repo}/codespaces`,
+      {
+        owner: owner,
+        repo: repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      }
+    );
+    console.log(githubResponse);
+  } catch (error) {
+    console.log(error);
   }
 };

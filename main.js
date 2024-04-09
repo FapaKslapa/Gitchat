@@ -20,6 +20,7 @@ import {
     getChats,
     getChatUsers,
     getFriendsFromDatabase,
+    getGithubUsername,
     getMessages,
     getOwnedChats,
     getUnacceptedFriendships,
@@ -32,7 +33,7 @@ import {
     rejectFriendship,
     updateMessage
 } from "./server/database.js";
-import {createRepo, getFiles, sendInvite, acceptInviteToRepo} from "./server/github.js";
+import {createRepo, getFiles, sendInvite, acceptInviteToRepo, createCodespace} from "./server/github.js";
 import fetch from 'node-fetch';
 
 const require = createRequire(import.meta.url);
@@ -450,26 +451,63 @@ app.get('/github/callback', async (req, res) => {
 });
 
 app.post('/github/createRepo', async (req, res) => {
-    const username = req.body.username;
-    const repoSpecs = req.body.repoSpecs;
-    const token1 = await getUserToken(username);
-    const token = token1[0].Token;
-    await createRepo(token, repoSpecs);
+    try{
+        const username = req.body.username;
+        const repoSpecs = req.body.repoSpecs;
+        const token1 = await getUserToken(username);
+        const token = token1[0].Token;
+        console.log("token "+token)
+        await createRepo(token, repoSpecs);
+        res.json({ message: "Repo created Succesfully" });
+    }catch(error){
+        console.log(error.data.error);
+        res.json({ message: "Something went wrong" });
+    }
 });
 
 app.get('/github/content', async (req, res) => {
-    const token1 = await getUserToken("Mael");
-    const token = token1[0].Token;
-    getFiles(token, "maelGhezzi", "node");
+    try {
+        const token1 = await getUserToken("Mael");
+        const token = token1[0].Token;
+        await getFiles(token, "maelGhezzi", "node");
+        res.json({ message: "Content loaded succesfully" });
+    }catch (error){
+        console.log(error);
+        res.json({ message: "Something went wrong" });
+    }
 })
 
-app.post('/github/sendInvite', async (req, res) => {
+//modifica che manda a tutti
+app.post('/github/sendInvites/:id', async (req, res) => {
     const username = req.body.username;
     const repo = req.body.repo;
-    const username2 = req.body.username2;
-    const token1 = await getUserToken(username);
-    const token = token1[0].Token;
-    sendInvite(token, "maelGhezzi", repo, username2);
+    try {
+        const users = await getChatParticipants(req.params.id);
+        const authUsers = [];
+        users.forEach(element => {
+            if(Object.keys(element).includes("usernameGithub")){
+                authUsers.push(element.usernameGithub);
+            }
+        });
+        const githubUsername = await getGithubUsername(username);
+        const token1 = await getUserToken(username);
+        const token = token1[0].Token;
+        const requests = [];
+        for (let i = 0; i < authUsers.length; i++) {
+            const githubResponse = await sendInvite(token, githubUsername, repo, authUsers[i]);
+            requests.push(githubResponse.id);
+        }
+        for(let i = 0; i < authUsers.length; i++){
+            const tokenAccept1 = await getUserToken(authUsers[i]);
+            const tokenAccept = tokenAccept1[0].Token;
+            const githubResponse = await acceptInviteToRepo(tokenAccept, requests[i]);
+            console.log(githubResponse);
+        }
+        res.json({ message: "All invites sent successfully" });
+    } catch (error) {
+        console.log(error);
+        res.json({ message: "Something went wrong" });
+    }
 })
 
 app.post('/github/acceptInvite', async (req, res) => {
@@ -477,4 +515,18 @@ app.post('/github/acceptInvite', async (req, res) => {
     const token1 = await getUserToken(username);
     const token = token1[0].Token;
     acceptInviteToRepo(token, 250182506);
+})
+
+app.post('/github/codespace', async (req, res) => {
+    const username = req.body.username;
+    const repoName = req.body.repo;
+    try{
+        const usernameGithub = await getGithubUsername(username);
+        const token1 = await getUserToken(username);
+        const token = token1[0].Token;
+        createCodespace(token, usernameGithub, repoName);
+    }catch(error){
+        console.log(error);
+        res.json({ message: "Something went wrong" });
+    }
 })

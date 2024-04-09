@@ -1,6 +1,7 @@
 import {createRequire} from "module";
 import fs from 'fs';
 import path, {resolve} from "path";
+import { response } from "express";
 
 const require = createRequire(import.meta.url);
 const {v4: uuidv4} = require("uuid");
@@ -142,9 +143,10 @@ export const getChatUsers = (chatId) => {
         });
     });
 };
+
 export const getChatParticipants = (chatId) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT account.Username, account.ImmagineProfilo
+        const sql = `SELECT account.Username, account.ImmagineProfilo, account.UsernameGithub
                      FROM account
                               JOIN partecipazione ON account.Username = partecipazione.IdAccount
                      WHERE partecipazione.IdChat = ?`;
@@ -155,9 +157,15 @@ export const getChatParticipants = (chatId) => {
                 resolve(result.map(user => {
                     let imagePath = `./images/${user.ImmagineProfilo}`;
                     let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
-                    return {
-                        username: user.Username, profileImage: imageAsBase64
-                    };
+                    if(user.UsernameGithub == null){
+                        return {
+                            username: user.Username, profileImage: imageAsBase64
+                        };
+                    }else{
+                        return {
+                            username: user.Username, profileImage: imageAsBase64, usernameGithub: user.UsernameGithub
+                        };
+                    }
                 }));
             }
         });
@@ -770,6 +778,22 @@ export const getUserToken = (username) => {
         });
     });
 };
+
+export const getGithubUsername = (username) => {
+    return new Promise((response, reject) => {
+        const sql = `SELECT account_github.Username FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ? OR account.UsernameGithub = ?`;
+        console.log(username);
+        db.query(sql, [username, username], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length == 0){
+                reject({ message: "User not found"});
+            }else{
+                resolve(result);
+            }
+        })
+    })
+}
 
 export const deleteChat = (chatId) => {
     return new Promise((resolve, reject) => {
