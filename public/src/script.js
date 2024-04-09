@@ -45,6 +45,9 @@ const passwordUtenteProfilo = document.getElementById("passwordUtenteProfilo");
 const numeroAmiciProfilo = document.getElementById("numeroAmiciProfilo");
 const imgUtenteProfilo = document.getElementById("imgUtenteProfilo");
 const buttonFile = document.getElementById("buttonFile");
+const buttonGH = document.getElementById("buttonGH");
+const buttonGitHub = document.getElementById("buttonGitHub");
+const githubSection = document.getElementById("githubSection");
 const buttonChat = document.getElementById("buttonChat");
 const fileSection = document.getElementById("fileSection");
 const cardFileSection = document.getElementById("cardFileSection");
@@ -741,6 +744,8 @@ buttonProfilo.onclick = () => {
 buttonFile.onclick = async () => {
     buttonFile.setAttribute('disabled', '');
     buttonChat.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+
     // Imposta l'opacità di 'fileSection' a 0
     gsap.set(fileSection, {autoAlpha: 0});
 
@@ -753,12 +758,35 @@ buttonFile.onclick = async () => {
     gsap.to(messages, {autoAlpha: 0, duration: 0.5});
     gsap.to(fileSection, {autoAlpha: 1, duration: 0.5});
     messages.classList.add('d-none');
+    githubSection.classList.add('d-none');
     const file = await getChatFileMessages(room);
     renderFile(file);
 };
+
+buttonGitHub.onclick = () => {
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.setAttribute('disabled', '');
+    buttonChat.removeAttribute('disabled');
+
+    // Imposta l'opacità di 'githubSection' a 0
+    gsap.set(githubSection, {autoAlpha: 0});
+
+    // Rimuovi la classe 'd-none' da 'githubSection'
+    githubSection.classList.remove('d-none');
+
+    // Animazione con GSAP
+    gsap.to(form, {autoAlpha: 0, duration: 0.5});
+    gsap.to(input, {autoAlpha: 0, duration: 0.5});
+    gsap.to(messages, {autoAlpha: 0, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    gsap.to(githubSection, {autoAlpha: 1, duration: 0.5}); // Aggiungi questa riga
+
+    fileSection.classList.add('d-none');
+}
 buttonChat.onclick = () => {
     buttonChat.setAttribute('disabled', '');
     buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
     messages.classList.remove('d-none');
     displayMessages(messageData);
     gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
@@ -766,7 +794,9 @@ buttonChat.onclick = () => {
     gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
     gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
     fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
 };
+
 buttonConnect.onclick = () => {
     fetch("/github/connect/" + username, {method: 'GET'})
         .then(response => response.json())
