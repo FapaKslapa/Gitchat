@@ -792,17 +792,17 @@ export const getGithubUsername = (username) => {
 }
 
 //{ url: url, id: idChat, name, name}
-export const insertRepo = (repoSpecs) => {
+export const insertRepo = (repoSpecs, url, idChat) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT Url, IdChat FROM repository WHERE Name = ?`;
+        const getSql = `SELECT Url, IdChat FROM repository WHERE Nome = ?`;
         db.query(getSql, [repoSpecs.name], (err, result) => {
             if(err){
                 reject(err);
             }else if(result.length > 0){
                 reject({ message: "Repository already present" });
             }else{
-                const setSql = `INSERT INTO repository (Url, IdChat, Name) VALUES (?, ?, ?)`;
-                db.query(setSql, [repoSpecs.url, repoSpecs.id, repoSpecs.name], (err) => {
+                const setSql = `INSERT INTO repository (Url, IdChat, Nome) VALUES (?, ?, ?)`;
+                db.query(setSql, [url, idChat, repoSpecs.name], (err) => {
                     if(err){
                         reject(err);
                     }else{
@@ -838,6 +838,7 @@ export const getRepoByChatId = (IdChat) => {
             }else if(result.length == 0){
                 reject({ message: "Repo not found" });
             }else{
+                console.log(result)
                 resolve(result[0]);
             }
         })

@@ -603,7 +603,7 @@ const connectRepository = (name, description, readme, priv) => {
         private: priv
     };
 
-    fetch("/github/createRepo",{
+    fetch("/github/createRepo/" + room,{
         method: "POST",
         headers: {
             'content-type':"application/json"
@@ -863,15 +863,11 @@ buttonRepository.onclick = () => {
 
 buttonOpenCodespace.onclick = () => {
     console.log("vadiocan")
-    fetch("/github/testpart", {
-        method: "POST",
+    fetch(`/chat/${room}/hasRepo`, {
+        method: "GET",
         headers: {
             'content-type': "Application/json"
-        },
-        body: JSON.stringify({
-            username: "maelGhezzi",
-            repo: "test1"
-        })
+        }
     })
 }
 

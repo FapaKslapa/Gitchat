@@ -22,7 +22,7 @@ export const createRepo = async (token, repoSpecs) => {
     });
     console.log(githubResponse)
     if (githubResponse.status == 201) {
-      return { message: "Repository created successfully" };
+      return { message: "Repository created successfully", fullname: githubResponse.data.full_name };
     } else {
       throw Error({ message: "Something went wrong" });
     }

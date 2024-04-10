@@ -29,6 +29,7 @@ import {
   getUnacceptedFriendships,
   getUserDetails,
   getUserToken,
+  insertRepo,
   loginUser,
   loginUserGithub,
   registerUser,
@@ -479,18 +480,24 @@ app.get("/github/callback", async (req, res) => {
   //res.json({url: 'http://localhost:3000/index.html'});
 });
 
-app.post("/github/createRepo", async (req, res) => {
+app.post("/github/createRepo/:id", async (req, res) => {
   try {
     const username = req.body.username;
     const repoSpecs = req.body.repoSpecs;
+    const idChat = req.params.id;
     const token1 = await getUserToken(username);
     const token = token1[0].Token;
     const ghRes = await createRepo(token, repoSpecs);
     console.log("ghres")
-    console.log(ghRes)
+    console.log(Object.keys(ghRes));
+    console.log("fullname")
+    console.log(ghRes.fullname);
+    const dbRes = await insertRepo(repoSpecs, ghRes.fullname, idChat);
+    console.log("dbRes");
+    console.log(dbRes)
     res.json({ message: "Repo created Succesfully" });
   } catch (error) {
-    console.log(error.data.error);
+    console.log(error);
     res.json({ message: "Something went wrong" });
   }
 });
@@ -581,7 +588,7 @@ app.get("/chat/:id/hasRepo", (req, res) => {
     let repoUrl, repoName;
     getRepoByChatId(idChat).then((res) => {
         repoUrl = res.Url;
-        repoName = res.Name;
+        repoName = res.Nome;
         console.log("Url: "+repoUrl+" name: "+repoName);
     }).catch((res) => {
         console.log(res);
