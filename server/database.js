@@ -829,6 +829,21 @@ export const getRepo = (repoName) => {
     })
 }
 
+export const getRepoByChatId = (IdChat) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT Url, Nome FROM repository WHERE IdChat = ?`;
+        db.query(sql, [IdChat], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length == 0){
+                reject({ message: "Repo not found" });
+            }else{
+                resolve(result[0]);
+            }
+        })
+    })
+}
+
 export const deleteChat = (chatId) => {
     return new Promise((resolve, reject) => {
         // Start the transaction

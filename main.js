@@ -25,6 +25,7 @@ import {
   getGithubUsername,
   getMessages,
   getOwnedChats,
+  getRepoByChatId,
   getUnacceptedFriendships,
   getUserDetails,
   getUserToken,
@@ -573,4 +574,16 @@ app.post("/github/codespace", async (req, res) => {
     console.log(error);
     res.json({ message: "Something went wrong" });
   }
+});
+
+app.get("/chat/:id/hasRepo", (req, res) => {
+    const idChat = req.params.id;
+    let repoUrl, repoName;
+    getRepoByChatId(idChat).then((res) => {
+        repoUrl = res.Url;
+        repoName = res.Name;
+        console.log("Url: "+repoUrl+" name: "+repoName);
+    }).catch((res) => {
+        console.log(res);
+    })
 });
