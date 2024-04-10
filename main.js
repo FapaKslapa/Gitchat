@@ -36,11 +36,12 @@ import {
   updateMessage
 } from "./server/database.js";
 import {
+  acceptInviteToRepo,
+  createCodespace,
   createRepo,
   getFiles,
-  sendInvite,
-  acceptInviteToRepo,
-  createCodespace
+  getRepoParticipants,
+  sendInvite
 } from "./server/github.js";
 import fetch from "node-fetch";
 
@@ -523,16 +524,19 @@ app.post("/github/sendInvites/:id", async (req, res) => {
     });
     const token1 = await getUserToken(username);
     const token = token1[0].Token;
+    const partecicipants = await getRepoParticipants(token, githubUsername, repo);
     const requests = [];
     console.log("parte1");
     for (let i = 0; i < authUsers.length; i++) {
-      const githubResponse = await sendInvite(
-        token,
-        githubUsername,
-        repo,
-        authUsers[i]
-      );
-      requests.push(githubResponse.data.id);
+        if(!partecicipants.includes(authUsers[i])){
+            const githubResponse = await sendInvite(
+                token,
+                githubUsername,
+                repo,
+                authUsers[i]
+            );
+            requests.push(githubResponse.data.id);
+        }
     }
     console.log("arriva1");
     console.log("parte2");

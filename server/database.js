@@ -791,6 +791,44 @@ export const getGithubUsername = (username) => {
     })
 }
 
+//{ url: url, id: idChat, name, name}
+export const insertRepo = (repoSpecs) => {
+    return new Promise((resolve, reject) => {
+        const getSql = `SELECT Url, IdChat FROM repository WHERE Name = ?`;
+        db.query(getSql, [repoSpecs.name], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length > 0){
+                reject({ message: "Repository already present" });
+            }else{
+                const setSql = `INSERT INTO repository (Url, IdChat, Name) VALUES (?, ?, ?)`;
+                db.query(setSql, [repoSpecs.url, repoSpecs.id, repoSpecs.name], (err) => {
+                    if(err){
+                        reject(err);
+                    }else{
+                        resolve({ message: "Repo inserted successfully" });
+                    }
+                })
+            }
+        })
+    })
+}
+
+export const getRepo = (repoName) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT Url FROM repository WHERE Name = ?`;
+        db.query(sql, [repoName], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length == 0){
+                reject({ message: "Repo not found" });
+            }else{
+                resolve(result[0].url);
+            }
+        })
+    })
+}
+
 export const deleteChat = (chatId) => {
     return new Promise((resolve, reject) => {
         // Start the transaction

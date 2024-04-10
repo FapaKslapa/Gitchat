@@ -119,3 +119,24 @@ export const createCodespace = async (token, owner, repo) => {
     console.log(error);
   }
 };
+
+export const getRepoParticipants = async (token, owner, repo) => {
+  try {
+    const octokit = new Octokit({ auth: token});
+    const githubResponse = await octokit.request(`GET /repos/{owner}/{repo}/collaborators`, {
+      owner: owner,
+      repo: repo,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    })
+    console.log(githubResponse);
+    const participants = [];
+    githubResponse.data.forEach(element => {
+      participants.push(element.login);
+    })
+    return(participants);
+  } catch (error) {
+    console.log(error);
+  }
+}

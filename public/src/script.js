@@ -614,7 +614,7 @@ const connectRepository = (name, description, readme, priv) => {
         })
     }).then((res) => {
         console.log(res.json());
-        fetch("/github/sendInvites/"+room, {
+        fetch("/github/sendInvites/"+ room, {
             method: "POST",
             headers: {
                 'content-type':"application/json"
@@ -862,14 +862,17 @@ buttonRepository.onclick = () => {
 }
 
 buttonOpenCodespace.onclick = () => {
-    
     console.log("vadiocan")
-    /*fetch("/github/content", {
-        method: "GET",
+    fetch("/github/testpart", {
+        method: "POST",
         headers: {
             'content-type': "Application/json"
-        }
-    })*/
+        },
+        body: JSON.stringify({
+            username: "maelGhezzi",
+            repo: "test1"
+        })
+    })
 }
 
 let popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
