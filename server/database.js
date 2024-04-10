@@ -1,7 +1,7 @@
 import {createRequire} from "module";
 import fs from 'fs';
 import path, {resolve} from "path";
-import { response } from "express";
+import {response} from "express";
 
 const require = createRequire(import.meta.url);
 const {v4: uuidv4} = require("uuid");
@@ -157,11 +157,11 @@ export const getChatParticipants = (chatId) => {
                 resolve(result.map(user => {
                     let imagePath = `./images/${user.ImmagineProfilo}`;
                     let imageAsBase64 = fs.readFileSync(imagePath, {encoding: 'base64'});
-                    if(user.UsernameGithub == null){
+                    if (user.UsernameGithub == null) {
                         return {
                             username: user.Username, profileImage: imageAsBase64
                         };
-                    }else{
+                    } else {
                         return {
                             username: user.Username, profileImage: imageAsBase64, usernameGithub: user.UsernameGithub
                         };
@@ -630,6 +630,7 @@ export const downloadFile = (room, filename) => {
     });
 };
 export const getUserDetails = (username) => {
+    console.log(username);
     return new Promise((resolve, reject) => {
         const sql = `SELECT Username, ImmagineProfilo, UsernameGithub, Mail, Password
                      FROM account
@@ -644,6 +645,7 @@ export const getUserDetails = (username) => {
             }
 
             let user = result[0];
+            console.log(result);
             let imagePath = `./images/${user.ImmagineProfilo}`;
             user.ImmagineProfilo = fs.readFileSync(imagePath, {encoding: 'base64'});
 
@@ -763,7 +765,8 @@ export const getUserToken = (username) => {
         const sql = `SELECT account_github.Token
                      FROM account
                               JOIN account_github ON account.UsernameGithub = account_github.Username
-                     WHERE account.Username = ? OR account.UsernameGithub = ?`;
+                     WHERE account.Username = ?
+                        OR account.UsernameGithub = ?`;
         db.query(sql, [username, username], (err, result) => {
             if (err) {
                 reject(err);
@@ -778,13 +781,16 @@ export const getUserToken = (username) => {
 
 export const getGithubUsername = (username) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT account_github.Username FROM account JOIN account_github ON account.UsernameGithub = account_github.Username WHERE account.Username = ?`;
+        const sql = `SELECT account_github.Username
+                     FROM account
+                              JOIN account_github ON account.UsernameGithub = account_github.Username
+                     WHERE account.Username = ?`;
         db.query(sql, [username], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length == 0){
-                reject({ message: "User not found" });
-            }else{
+            } else if (result.length == 0) {
+                reject({message: "User not found"});
+            } else {
                 resolve(result[0].Username);
             }
         })
@@ -794,19 +800,22 @@ export const getGithubUsername = (username) => {
 //{ url: url, id: idChat, name, name}
 export const insertRepo = (repoSpecs, url, idChat) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT Url, IdChat FROM repository WHERE Nome = ?`;
+        const getSql = `SELECT Url, IdChat
+                        FROM repository
+                        WHERE Nome = ?`;
         db.query(getSql, [repoSpecs.name], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length > 0){
-                reject({ message: "Repository already present" });
-            }else{
-                const setSql = `INSERT INTO repository (Url, IdChat, Nome) VALUES (?, ?, ?)`;
+            } else if (result.length > 0) {
+                reject({message: "Repository already present"});
+            } else {
+                const setSql = `INSERT INTO repository (Url, IdChat, Nome)
+                                VALUES (?, ?, ?)`;
                 db.query(setSql, [url, idChat, repoSpecs.name], (err) => {
-                    if(err){
+                    if (err) {
                         reject(err);
-                    }else{
-                        resolve({ message: "Repo inserted successfully" });
+                    } else {
+                        resolve({message: "Repo inserted successfully"});
                     }
                 })
             }
@@ -816,13 +825,15 @@ export const insertRepo = (repoSpecs, url, idChat) => {
 
 export const getRepo = (repoName) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT Url FROM repository WHERE Name = ?`;
+        const sql = `SELECT Url
+                     FROM repository
+                     WHERE Name = ?`;
         db.query(sql, [repoName], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length == 0){
-                reject({ message: "Repo not found" });
-            }else{
+            } else if (result.length == 0) {
+                reject({message: "Repo not found"});
+            } else {
                 resolve(result[0].url);
             }
         })
@@ -831,13 +842,15 @@ export const getRepo = (repoName) => {
 
 export const getRepoByChatId = (IdChat) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT Url, Nome FROM repository WHERE IdChat = ?`;
+        const sql = `SELECT Url, Nome
+                     FROM repository
+                     WHERE IdChat = ?`;
         db.query(sql, [IdChat], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length == 0){
-                reject({ message: "Repo not found" });
-            }else{
+            } else if (result.length == 0) {
+                reject({message: "Repo not found"});
+            } else {
                 console.log(result)
                 resolve(result[0]);
             }

@@ -13,7 +13,10 @@ import {
     getUserOwnedChats,
     getUserDetails,
     getChatFileMessages,
-    deleteChatRoom
+    deleteChatRoom,
+    updateUsername,
+    updateUserEmail,
+    updateUserProfileImage
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
@@ -34,6 +37,7 @@ const gestisciRichieste = document.getElementById("gestisciRichieste");
 const checkBoxRichieste = document.getElementById("checkBoxRichieste");
 const invita = document.getElementById("invitaInChat");
 const checkBoxChat = document.getElementById("checkBoxChat");
+const avatar = document.getElementById("avatar");
 const newChatButton = document.getElementById("newChatButton");
 const divSelectFile = document.getElementById("divSelectFile");
 const fileNameSelect = document.getElementById("fileNameSelect");
@@ -105,7 +109,7 @@ download
 const templateMessageMio = `
 <li class="d-flex justify-content-start mb-4">
     <img src="%SRC" alt="avatar"
-         class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60" style="margin-right: 10px;">
+         class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60" height="60" style="margin-right: 10px;">
     <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
         <div class="card-header d-flex justify-content-between align-items-center">
     <p class="fw-bold mb-0 me-3">%USERNAME</p>
@@ -135,7 +139,7 @@ const templateMessageAltro = `
         </div>
     </div>
     <img src="%SRC" alt="avatar"
-         class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" style="margin-left: 10px;">
+         class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60" height="60" style="margin-left: 10px;">
 </li>`;
 
 
@@ -212,11 +216,7 @@ const renderFile = (array) => {
         dataInvio.setHours(oraInvio[0], oraInvio[1]);
 
         let formattedDate = dataInvio.toLocaleDateString("it-IT", {
-            year: "2-digit",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
+            year: "2-digit", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"
         });
         // Create a new card
         const card = templateFileSection.replace("%NOMEFILE", nomeFile).replace("%IDFILE", file.path).replace("%VALUEFILE", file.path).replace("%USERNAME", file.autore).replace("%TEMPO", formattedDate);
@@ -251,6 +251,7 @@ const displayMessages = (array) => {
     messages.innerHTML = '';
     array.forEach(({IdAutore, Testo, Data_invio, Ora_invio, Path}, index) => {
         let user = chat ? chat.users.find(user => user.username === IdAutore) : null;
+        console.log(user);
         if (!user) {
             user = {
                 username: 'Utente Eliminato', profileImage: './images/default.jpg'
@@ -324,6 +325,7 @@ const displayNewMessage = (array) => {
     messages.innerHTML = '';
     array.forEach(({IdAutore, Testo, Data_invio, Ora_invio, Path}, index) => {
         let user = chat ? chat.users.find(user => user.username === IdAutore) : null;
+        console.log(user);
         if (!user) {
             user = {
                 username: 'Utente Eliminato', profileImage: './images/default.jpg'
@@ -597,31 +599,22 @@ const renderPartecipanti = (partecipanti) => {
 
 const connectRepository = (name, description, readme, priv) => {
     const repoSpecs = {
-        name: name,
-        descr: description,
-        auto_init: readme,
-        private: priv
+        name: name, descr: description, auto_init: readme, private: priv
     };
 
-    fetch("/github/createRepo/" + room,{
-        method: "POST",
-        headers: {
-            'content-type':"application/json"
-        },
-        body: JSON.stringify({
-            username: username,
-            repoSpecs: repoSpecs
+    fetch("/github/createRepo/" + room, {
+        method: "POST", headers: {
+            'content-type': "application/json"
+        }, body: JSON.stringify({
+            username: username, repoSpecs: repoSpecs
         })
     }).then((res) => {
         console.log(res.json());
-        fetch("/github/sendInvites/"+ room, {
-            method: "POST",
-            headers: {
-                'content-type':"application/json"
-            },
-            body: JSON.stringify({
-                username: username,
-                repo: repoSpecs.name
+        fetch("/github/sendInvites/" + room, {
+            method: "POST", headers: {
+                'content-type': "application/json"
+            }, body: JSON.stringify({
+                username: username, repo: repoSpecs.name
             })
         }).then((res) => {
             return res.json();
@@ -634,15 +627,20 @@ if (params.has("login")) {
         sessionStorage.setItem("username", params.get("login"));
         sessionStorage.setItem("password", "logged w/ github");
     }
+    // Rimuovi i parametri di query dall'URL
+    let newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({}, document.title, newUrl);
 }
 
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "./accedi.html";
 } else {
+    console.log(sessionStorage.getItem("username"));
     user = await getUserDetails(sessionStorage.getItem("username"));
     sessionStorage.setItem("username", user.Username);
     username = sessionStorage.getItem("username");
     password = sessionStorage.getItem("password");
+    avatar.src = `data:image/jpeg;base64,${user.ImmagineProfilo}`;
     chats = await getUserChats(username);
     mieChat = await getUserOwnedChats(username);
     listChat.innerHTML = chats
@@ -851,11 +849,11 @@ buttonRepository.onclick = () => {
     console.log("c'è")
     name.classList.add("border-light");
     name.classList.remove("border-danger");
-    if(name.value!=""){
+    if (name.value != "") {
         const result = connectRepository(name.value, descr.value, readme.checked, priv.checked)
         console.log(result);
         modalRepository.hide();
-    }else{
+    } else {
         name.classList.add("border-danger");
         name.classList.remove("border-light");
     }
@@ -864,8 +862,7 @@ buttonRepository.onclick = () => {
 buttonOpenCodespace.onclick = () => {
     console.log("vadiocan")
     fetch(`/chat/${room}/hasRepo`, {
-        method: "GET",
-        headers: {
+        method: "GET", headers: {
             'content-type': "Application/json"
         }
     })
@@ -898,3 +895,99 @@ popoverTriggerList.forEach(function (popoverTriggerEl) {
         });
     })
 })
+
+// Seleziona gli elementi che desideri rendere modificabili
+
+
+function handleDblClick(event) {
+    let elem = event.target;
+    let currentText = elem.textContent;
+    let inputElem = document.createElement('input');
+    inputElem.type = 'text';
+    inputElem.value = currentText;
+    inputElem.classList.add('form-control'); // Aggiungi la classe 'form-control'
+    inputElem.addEventListener('blur', handleBlur);
+    inputElem.addEventListener('keydown', handleKeyDown);
+    elem.textContent = '';
+    elem.appendChild(inputElem);
+    inputElem.focus();
+}
+
+// Funzione per gestire la perdita di focus
+function handleBlur(event) {
+    let inputElem = event.target;
+    let newText = inputElem.value;
+    let parentElem = inputElem.parentElement;
+    parentElem.removeChild(inputElem);
+    parentElem.textContent = newText;
+}
+
+// Funzione per gestire la pressione del tasto invio
+function handleKeyDown(event) {
+    if (event.key === 'Enter') {
+        event.target.blur();
+    }
+}
+
+// Aggiungi il gestore di eventi a ciascun elemento
+nomeUtenteProfilo.addEventListener('dblclick', handleDblClick);
+mailUtenteProfilo.addEventListener('dblclick', handleDblClick);
+
+const modificaAccount = document.getElementById('modificaAccount');
+modificaAccount.onclick = async () => {
+    console.log(nomeUtenteProfilo.textContent);
+    console.log(mailUtenteProfilo.textContent);
+    console.log(user);
+    // Recupera l'elemento di input del file
+    let imageInput = document.getElementById('imageProfileInput');
+    let imageFile = imageInput.files[0];
+    if (user.Username !== nomeUtenteProfilo.textContent) {
+        await updateUsername(user.Username, nomeUtenteProfilo.textContent);
+    }
+    if (user.Email !== mailUtenteProfilo.textContent) {
+        await updateUserEmail(user.Username, mailUtenteProfilo.textContent);
+    }
+    if (imageFile) {
+        await updateUserProfileImage(user.Username, imageFile);
+    }
+    user = await getUserDetails(nomeUtenteProfilo.textContent);
+    sessionStorage.setItem("username", user.Username);
+    username = sessionStorage.getItem("username");
+    setProfile(user);
+    console.log(user);
+    avatar.src = `data:image/jpeg;base64,${user.ImmagineProfilo}`;
+    chats = await getUserChats(username);
+    mieChat = await getUserOwnedChats(username);
+    listChat.innerHTML = chats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(chats);
+}
+
+document.getElementById('imageProfileInput').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('imgUtenteProfilo').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    const tooltip = new bootstrap.Tooltip(tooltipTriggerEl);
+
+    // Aggiungi un gestore di eventi 'dblclick' all'elemento
+    tooltipTriggerEl.addEventListener('dblclick', function () {
+        tooltip.hide();
+    });
+
+    return tooltip;
+});

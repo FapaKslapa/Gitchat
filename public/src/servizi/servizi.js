@@ -235,3 +235,54 @@ export async function deleteChatRoom(chatId) {
         return {message: "Errore"};
     }
 }
+
+/**
+ * Funzione per modificare l'immagine del profilo di un utente.
+ * @param {string} username - Il nome dell'utente.
+ * @param {File} imageFile - Il nuovo file immagine del profilo.
+ */
+export async function updateUserProfileImage(username, imageFile) {
+    const formData = new FormData();
+    formData.append('images', imageFile);
+
+    const response = await fetch(`/user/${username}/profile/image`, {
+        method: 'PUT',
+        body: formData
+    });
+
+    return await response.json();
+}
+
+/**
+ * Funzione per modificare lo username di un utente.
+ * @param {string} username - Il nome dell'utente.
+ * @param {string} newUsername - Il nuovo username.
+ */
+export async function updateUsername(username, newUsername) {
+    const response = await fetch(`/user/${username}/profile/username`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({newUsername})
+    });
+
+    return await response.json();
+}
+
+/**
+ * Funzione per modificare la mail di un utente.
+ * @param {string} username - Il nome dell'utente.
+ * @param {string} newEmail - La nuova email.
+ */
+export async function updateUserEmail(username, newEmail) {
+    const response = await fetch(`/user/${username}/profile/email`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({newEmail})
+    });
+
+    return await response.json();
+}

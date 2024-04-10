@@ -420,3 +420,107 @@ a.article:hover {
     border: none;
     padding: 0;
 }
+
+.upload-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-image {
+    width: 18.75rem;
+    height: 18.75rem;
+    border-radius: 50%;
+    position: relative;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 5.75rem;
+    right: 0;
+    width: 18.75rem;
+    height: 18.75rem;
+    opacity: 0;
+    transition: .5s ease;
+    background-color: #000;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.upload-container:hover .overlay {
+    opacity: 0.5;
+}
+
+.upload-icon {
+    color: white;
+    font-size: 50px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+/* Personalizzazione del colore del checkbox */
+.form-check-input:checked {
+    background-color: #8044C5 !important;
+    border-color: #8044C5 !important;
+}
+
+/* Stile per il pallino interno dello switch */
+.form-check-input[type='checkbox'][role='switch']::before {
+    content: '';
+    position: absolute;
+    top: 0.125rem;
+    /* Regola questa proprietà per centrare verticalmente il pallino */
+    left: 0.25rem;
+    width: var(--bs-switch-knob-width);
+    height: var(--bs-switch-knob-height);
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.4s;
+}
+
+/* Sposta il pallino interno quando lo switch è attivo */
+.form-check-input:checked[type='checkbox'][role='switch']::before {
+    transform: translateX(calc(var(--bs-switch-bg-width) - var(--bs-switch-knob-width) - 0.5rem));
+}
+
+#imgUtenteProfilo {
+    width: 18.75rem;
+    height: 18.75rem;
+    object-fit: cover; /* Mantiene le proporzioni dell'immagine */
+}
+
+.tooltip .tooltip-inner {
+    background-color: #8044C5; /* Colore di sfondo del tooltip */
+}
+
+.tooltip.bs-tooltip-top .arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="top"] .arrow::before {
+    border-top-color: #8044C5; /* Colore della freccia del tooltip */
+}
+
+.tooltip.bs-tooltip-right .arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="right"] .arrow::before {
+    border-right-color: #8044C5;
+}
+
+.tooltip.bs-tooltip-bottom .arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .arrow::before {
+    border-bottom-color: #8044C5;
+}
+
+.tooltip.bs-tooltip-left .arrow::before,
+.tooltip.bs-tooltip-auto[data-popper-placement^="left"] .arrow::before {
+    border-left-color: #8044C5;
+}
+
+.tooltip .tooltip-inner {
+    color: #ffffff; /* Colore del testo del tooltip */
+    font-family: "Lexend", sans-serif; /* Font del tooltip */
+}
