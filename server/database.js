@@ -926,3 +926,62 @@ export const deleteChat = (chatId) => {
         });
     });
 };
+
+export const insertCodespace = (url, repoUrl, idChat) => {
+    return new Promise((resolve, reject) => {
+        const getSql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
+        db.query(getSql, [repoUrl, idChat], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length > 0){
+                reject({ message: "No codespace found" });
+            }else{
+                const sql = `UPDATE repository SET codespace = ? WHERE Url = ? AND IdChat = ?`;
+                db.query(sql, [url, repoUrl, idChat], (err) => {
+                    if(err){
+                        reject(err);
+                    }else{
+                        resolve({ message: "Codespace inserted successfully" });
+                    }
+                })
+            }
+        })
+    })
+}
+
+export const removeCodespace = (repoUrl, idChat) => {
+    return new Promise((resolve, reject) => {
+        const getSql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
+        db.query(getSql, [repoUrl, idChat], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length > 0){
+                reject({ message: "No codespace found" });
+            }else{
+                const sql = `UPDATE repository SET codespace = NULL WHERE Url = ? AND IdChat = ?`;
+                db.query(sql, [repoUrl, idChat], (err) => {
+                    if(err){
+                        reject(err);
+                    }else{
+                        resolve({ message: "Codespace removed successfully" });
+                    }
+                })
+            }
+        })
+    })
+}
+
+export const getCodespace = (repoUrl, idChat) => {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
+        db.query(sql, [repoUrl, idChat], (err, result) => {
+            if(err){
+                reject(err);
+            }else if(result.length == 0 || result[0].codespace == null){
+                resolve({ message: "No codespace found" });
+            }else{
+                resolve(result[0]);
+            }
+        })
+    })
+}

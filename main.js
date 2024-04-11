@@ -21,6 +21,7 @@ import {
     getChatParticipants,
     getChats,
     getChatUsers,
+    getCodespace,
     getFriendsFromDatabase,
     getGithubUsername,
     getMessages,
@@ -29,6 +30,7 @@ import {
     getUnacceptedFriendships,
     getUserDetails,
     getUserToken,
+    insertCodespace,
     insertRepo,
     loginUser,
     loginUserGithub,
@@ -582,14 +584,31 @@ app.post("/github/acceptInvite", async (req, res) => {
     acceptInviteToRepo(token, 250182506);
 });
 
-app.post("/github/codespace", async (req, res) => {
+app.post("/github/codespace/:id", async (req, res) => {
     const username = req.body.username;
-    const repoName = req.body.repo;
+    const idChat = req.params.id;
     try {
         const usernameGithub = await getGithubUsername(username);
+        const dbResp = await getRepoByChatId(idChat);
+        const repoUrl = dbResp.Url;
+        const repoName = dbResp.Nome;
+        console.log("repourl: "+repoUrl);
+        console.log("reponame: "+repoName);
         const token1 = await getUserToken(username);
         const token = token1[0].Token;
-        createCodespace(token, usernameGithub, repoName);
+        const codespaceUrl = await getCodespace(repoUrl, idChat);
+        console.log(codespaceUrl);
+        if(Object.keys(codespaceUrl).includes("codespace")){
+            res.json({ url: codespaceUrl.codespace });
+        }else{
+            const ghResp = await createCodespace(token, usernameGithub, repoName);
+            console.log("ghResp");
+            console.log(ghResp);
+            if(ghResp.status == 201){
+                await insertCodespace(ghResp[0].name);
+                res.json({ message: "Codespace created succesfully" , url: ghResp[0].web_url });
+            }
+        } 
     } catch (error) {
         console.log(error);
         res.json({message: "Something went wrong"});

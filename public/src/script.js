@@ -1000,7 +1000,20 @@ buttonRepository.onclick = () => {
 }
 
 buttonOpenCodespace.onclick = () => {
-    console.log("vadiocan")
+    fetch("/github/codespace/"+room, {
+        method: "POST",
+        headers: {
+            "content-type":"Application/json"
+        },
+        body: JSON.stringify({
+            username: username
+        })
+    }).then((res) => res.json())
+    .then((res) => {
+        console.log("res");
+        console.log(res)
+    })
+    console.log("vadiocan");
 }
 
 document.getElementById("modalRepository").addEventListener("hide.bs.modal", () => {

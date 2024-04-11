@@ -9,7 +9,7 @@ const { Octokit, App } = require("octokit");
 export const createRepo = async (token, repoSpecs) => {
   const octokit = new Octokit({ auth: token });
   try {
-    console.log("descr: "+repoSpecs.descr)
+    console.log("descr: " + repoSpecs.descr);
     const githubResponse = await octokit.request("POST /user/repos", {
       name: repoSpecs.name,
       description: repoSpecs.descr,
@@ -17,12 +17,15 @@ export const createRepo = async (token, repoSpecs) => {
       auto_init: repoSpecs.auto_init,
       is_template: false,
       Headers: {
-        "X-GitHub-Api-Version": "2022-11-28",
-      },
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
     });
-    console.log(githubResponse)
+    console.log(githubResponse);
     if (githubResponse.status == 201) {
-      return { message: "Repository created successfully", fullname: githubResponse.data.full_name };
+      return {
+        message: "Repository created successfully",
+        fullname: githubResponse.data.full_name
+      };
     } else {
       throw Error({ message: "Something went wrong" });
     }
@@ -34,17 +37,17 @@ export const createRepo = async (token, repoSpecs) => {
 export const acceptInviteToRepo = async (token, invitationId) => {
   try {
     const octokit = new Octokit({
-      auth: token,
+      auth: token
     });
-    console.log("token: "+token)
-    console.log("invitation id: "+invitationId)
+    console.log("token: " + token);
+    console.log("invitation id: " + invitationId);
     const githubResponse = await octokit.request(
       `PATCH /user/repository_invitations/{invitation_id}`,
       {
         invitation_id: invitationId,
         headers: {
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       }
     );
     console.log("githubResponse");
@@ -57,7 +60,7 @@ export const acceptInviteToRepo = async (token, invitationId) => {
 export const sendInvite = async (token, owner, repo, user) => {
   try {
     const octokit = new Octokit({
-      auth: token,
+      auth: token
     });
 
     const githubResponse = await octokit.request(
@@ -67,8 +70,8 @@ export const sendInvite = async (token, owner, repo, user) => {
         repo: repo,
         username: user,
         headers: {
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       }
     );
     return githubResponse;
@@ -92,8 +95,8 @@ export const getFiles = async (token, owner, repo, path) => {
       path: path,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
-        accept: "application/vnd.github+json",
-      },
+        accept: "application/vnd.github+json"
+      }
     });
     return githubResponse.data;
   } catch (error) {
@@ -111,10 +114,11 @@ export const createCodespace = async (token, owner, repo) => {
         repo: repo,
         headers: {
           "X-GitHub-Api-Version": "2022-11-28",
-        },
+        }
       }
     );
-    console.log(githubResponse);
+    //console.log(githubResponse);
+    return githubResponse;
   } catch (error) {
     console.log(error);
   }
@@ -122,21 +126,24 @@ export const createCodespace = async (token, owner, repo) => {
 
 export const getRepoParticipants = async (token, owner, repo) => {
   try {
-    const octokit = new Octokit({ auth: token});
-    const githubResponse = await octokit.request(`GET /repos/{owner}/{repo}/collaborators`, {
-      owner: owner,
-      repo: repo,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
+    const octokit = new Octokit({ auth: token });
+    const githubResponse = await octokit.request(
+      `GET /repos/{owner}/{repo}/collaborators`,
+      {
+        owner: owner,
+        repo: repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28"
+        }
       }
-    })
+    );
     console.log(githubResponse);
     const participants = [];
     githubResponse.data.forEach(element => {
       participants.push(element.login);
-    })
-    return(participants);
+    });
+    return participants;
   } catch (error) {
     console.log(error);
   }
-}
+};
