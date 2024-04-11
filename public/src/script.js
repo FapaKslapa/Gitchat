@@ -113,11 +113,19 @@ const templateMessageMio = `
          class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60" height="60" style="margin-right: 10px;">
     <div class="card mask-custom" style="width: fit-content; max-width: 50%;">
         <div class="card-header d-flex justify-content-between align-items-center">
-    <p class="fw-bold mb-0 me-3">%USERNAME</p>
-    <p class="small mb-0"><i class="far fa-clock"></i>%TEMPO</p>
-</div>
+            <p class="fw-bold mb-0 me-3">%USERNAME</p>
+            <div>
+                <p class="small mb-0"><i class="far fa-clock"></i>%TEMPO  
+                <button class="btn btn-trasparent btn-sm text-dark align-middle" style="padding: 0; border: none;" data-bs-toggle="popover" title="Titolo del Popover" data-bs-content="Contenuto del Popover">
+                    <span class="material-symbols-rounded align-middle">
+                        more_vert
+                    </span>
+                </button></p>
+                
+            </div>
+        </div>
         <div class="card-body">
-        %FILE
+            %FILE
             <p class="mb-0">
                 %TESTO
             </p>
@@ -762,6 +770,8 @@ deleteChat.onclick = async () => {
     await deleteChatRoom(room);
     mieChat = await getUserOwnedChats(username);
     chats = await getUserChats(username);
+    messageData = [];
+    displayMessages(messageData);
     listChat.innerHTML = chats
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
