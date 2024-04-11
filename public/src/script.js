@@ -165,6 +165,17 @@ const setProfile = (profile) => {
 const handleClick = async (i, array) => {
     socket.emit("leaveRoom", room, username);
     messageData = [];
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
     room = array[i].IdChat;
     socket.emit('join room', array[i].IdChat);
     chatSelezionata = array[i].NomeChat;
@@ -429,8 +440,8 @@ const renderInvitoChat = (friends) => {
 <h3 class="align-middle">${friend.username}</h3>
 </div>
 <div class="col-md-auto align-middle">
-<input type="checkbox" class="btn-check" id="invitaChat_${friend.username}" value="${friend.username}" autocomplete="off">
-<label class="btn btn-outline-primary" for="invitaChat_${friend.username}">Seleziona</label>
+<input type="checkbox" class="btn-check" id="invitaNuovaChat_${friend.username}" value="${friend.username}" autocomplete="off">
+<label class="btn btn-outline-primary" for="invitaNuovaChat_${friend.username}">Seleziona</label>
 </div>
 </div>`;
 
@@ -531,7 +542,7 @@ const getSelectedFriends = () => {
     // Loop through each checkbox
     for (let i = 0; i < checkboxes.length; i++) {
         // If the checkbox is checked and its id starts with 'invitaChat_', add its value to the array
-        if (checkboxes[i].checked && checkboxes[i].id.startsWith('invitaChat_')) {
+        if (checkboxes[i].checked && checkboxes[i].id.startsWith('invitaNuovaChat_')) {
             selectedFriends.push(checkboxes[i].value);
         }
     }
@@ -654,7 +665,7 @@ const sendInvites = (room, repoName) => {
     }).then((res) => {
         return res.json();
     })
-} 
+}
 
 const checkRepo = (IdChat) => {
     return new Promise((resolve, reject) => {
@@ -663,16 +674,16 @@ const checkRepo = (IdChat) => {
                 'content-type': "Application/json"
             }
         })
-        .then((res) => res.json())
-        .then((res) => {
-            console.log("res")
-            console.log(res.result)
-            if(res.result){
-                resolve(res.url);
-            }else{
-                reject(false);
-            }
-        })
+            .then((res) => res.json())
+            .then((res) => {
+                console.log("res")
+                console.log(res.result)
+                if (res.result) {
+                    resolve(res.url);
+                } else {
+                    reject(false);
+                }
+            })
     })
 }
 
@@ -689,7 +700,6 @@ if (params.has("login")) {
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "./accedi.html";
 } else {
-
     user = await getUserDetails(sessionStorage.getItem("username"));
     sessionStorage.setItem("username", user.Username);
     username = sessionStorage.getItem("username");
@@ -723,6 +733,19 @@ newChat.onclick = async () => {
     await createChat(nomeChat.value, data, username);
     mieChat = await getUserOwnedChats(username);
     chats = await getUserChats(username);
+    messageData = [];
+    displayMessages(messageData);
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
     listChat.innerHTML = chats
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
@@ -732,11 +755,14 @@ newChat.onclick = async () => {
         })
         .join("");
     renderChat(chats);
+    nomeChat.value = "";
 }
 newChatButton.onclick = async () => {
     const data = await getUserFriends(username);
     renderInvitoChat(data);
-
+}
+document.getElementById("closeModalNuovaChat").onclick = () => {
+    nomeChat.value = "";
 }
 form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -788,6 +814,31 @@ inviaAmicizia.onclick = async () => {
     checkRepo(room).then((url) => {
         sendInvites(room, url.split("/")[1]);
     });
+    chats = await getUserChats(username);
+    mieChat = await getUserOwnedChats(username);
+    messageData = [];
+
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
+    displayMessages(messageData);
+    listChat.innerHTML = chats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(chats);
 }
 gestisciRichieste.onclick = async () => {
     renderRichieste(await getUnacceptedFriendships(username));
@@ -821,6 +872,17 @@ deleteChat.onclick = async () => {
     mieChat = await getUserOwnedChats(username);
     chats = await getUserChats(username);
     messageData = [];
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
     displayMessages(messageData);
     listChat.innerHTML = chats
         .map((chat) => {
@@ -904,7 +966,7 @@ buttonConnect.onclick = () => {
 
 buttonModal.onclick = () => {
     checkRepo(room).then((url) => {
-        window.open("https://www.github.com/"+url, "_blank").focus();
+        window.open("https://www.github.com/" + url, "_blank").focus();
         console.log(url)
         console.log("arriva1")
     }).catch((result) => {
@@ -1037,6 +1099,7 @@ modificaAccount.onclick = async () => {
     avatar.src = `data:image/jpeg;base64,${user.ImmagineProfilo}`;
     chats = await getUserChats(username);
     mieChat = await getUserOwnedChats(username);
+
     listChat.innerHTML = chats
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
@@ -1047,6 +1110,17 @@ modificaAccount.onclick = async () => {
         .join("");
     renderChat(chats);
     messageData = [];
+    buttonChat.setAttribute('disabled', '');
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
+    messages.classList.remove('d-none');
+    displayMessages(messageData);
+    gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(input, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.fromTo(messages, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
+    gsap.to(fileSection, {autoAlpha: 0, duration: 0.5});
+    fileSection.classList.add('d-none');
+    githubSection.classList.add('d-none');
     displayMessages(messageData);
     spinner.classList.add('d-none');
     page.classList.remove('d-none');
