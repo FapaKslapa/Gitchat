@@ -20,6 +20,8 @@ import {
 } from "./servizi/servizi.js"; // Importa i servizi
 
 const socket = io();
+const page = document.getElementById("page");
+const spinner = document.getElementById("spinner");
 const fileInput = document.getElementById("file-input");
 const form = document.getElementById("form");
 const input = document.getElementById("messaggio");
@@ -45,7 +47,6 @@ const deleteSelectFile = document.getElementById("deleteSelectFile");
 const buttonProfilo = document.getElementById("buttonProfilo");
 const nomeUtenteProfilo = document.getElementById("nomeUtenteProfilo");
 const mailUtenteProfilo = document.getElementById("mailUtenteProfilo");
-const passwordUtenteProfilo = document.getElementById("passwordUtenteProfilo");
 const numeroAmiciProfilo = document.getElementById("numeroAmiciProfilo");
 const imgUtenteProfilo = document.getElementById("imgUtenteProfilo");
 const buttonFile = document.getElementById("buttonFile");
@@ -147,7 +148,6 @@ const setProfile = (profile) => {
     const duration = 1.0; // Durata dell'animazione in secondi
     gsap.to(nomeUtenteProfilo, {duration, text: profile.Username, ease: "power1.out"});
     gsap.to(mailUtenteProfilo, {duration, text: profile.Mail, ease: "power1.out"});
-    gsap.to(passwordUtenteProfilo, {duration, text: profile.Password, ease: "power1.out"});
     gsap.to(numeroAmiciProfilo, {duration, text: profile.numFriends, ease: "power1.out"});
 
     // Per l'immagine, non c'è bisogno di un'animazione di testo
@@ -165,15 +165,14 @@ const handleClick = async (i, array) => {
             document.getElementById(`chat_${array[j].IdChat}`).classList.remove("disabled");
         }
     }
+    buttonFile.removeAttribute('disabled');
+    buttonGitHub.removeAttribute('disabled');
     document.getElementById(`chat_${array[i].IdChat}`).classList.add("active");
-    console.log(room);
-    console.log(mieChat);
     if (mieChat.some(chat => chat.Id === room)) {
         invita.removeAttribute("disabled");
     }
     messageData = await getChatMessages(room)
     displayMessages(messageData);
-    //renderChat(array);
 };
 const renderChat = (array) => {
     for (let i = 0; i < array.length; i++) {
@@ -635,7 +634,7 @@ if (params.has("login")) {
 if (sessionStorage.getItem("username") === null || sessionStorage.getItem("password") === null) {
     window.location.href = "./accedi.html";
 } else {
-    console.log(sessionStorage.getItem("username"));
+
     user = await getUserDetails(sessionStorage.getItem("username"));
     sessionStorage.setItem("username", user.Username);
     username = sessionStorage.getItem("username");
@@ -643,6 +642,8 @@ if (sessionStorage.getItem("username") === null || sessionStorage.getItem("passw
     avatar.src = `data:image/jpeg;base64,${user.ImmagineProfilo}`;
     chats = await getUserChats(username);
     mieChat = await getUserOwnedChats(username);
+    spinner.classList.add('d-none');
+    page.classList.remove('d-none');
     listChat.innerHTML = chats
         .map((chat) => {
             const usernames = chat.users.map(user => user.username).join(", ");
@@ -935,9 +936,8 @@ mailUtenteProfilo.addEventListener('dblclick', handleDblClick);
 
 const modificaAccount = document.getElementById('modificaAccount');
 modificaAccount.onclick = async () => {
-    console.log(nomeUtenteProfilo.textContent);
-    console.log(mailUtenteProfilo.textContent);
-    console.log(user);
+    spinner.classList.remove('d-none');
+    page.classList.add('d-none');
     // Recupera l'elemento di input del file
     let imageInput = document.getElementById('imageProfileInput');
     let imageFile = imageInput.files[0];
@@ -954,7 +954,7 @@ modificaAccount.onclick = async () => {
     sessionStorage.setItem("username", user.Username);
     username = sessionStorage.getItem("username");
     setProfile(user);
-    console.log(user);
+
     avatar.src = `data:image/jpeg;base64,${user.ImmagineProfilo}`;
     chats = await getUserChats(username);
     mieChat = await getUserOwnedChats(username);
@@ -967,6 +967,10 @@ modificaAccount.onclick = async () => {
         })
         .join("");
     renderChat(chats);
+    messageData = [];
+    displayMessages(messageData);
+    spinner.classList.add('d-none');
+    page.classList.remove('d-none');
 }
 
 document.getElementById('imageProfileInput').addEventListener('change', function (e) {

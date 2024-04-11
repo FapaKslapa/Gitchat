@@ -632,7 +632,7 @@ export const downloadFile = (room, filename) => {
 export const getUserDetails = (username) => {
     console.log(username);
     return new Promise((resolve, reject) => {
-        const sql = `SELECT Username, ImmagineProfilo, UsernameGithub, Mail, Password
+        const sql = `SELECT Username, ImmagineProfilo, UsernameGithub, Mail
                      FROM account
                      WHERE Username = ?`;
         db.query(sql, [username], (err, result) => {

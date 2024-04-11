@@ -421,17 +421,24 @@ a.article:hover {
     padding: 0;
 }
 
+.popover-body {
+    font-family: "Lexend", sans-serif;
+}
+
 .upload-container {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 19.75rem;
+    height: 19.75rem;
 }
 
 .upload-image {
-    width: 18.75rem;
-    height: 18.75rem;
+    width: 19.75rem; /* fill the width of the container */
+    height: 19.75rem; /* fill the height of the container */
     border-radius: 50%;
+    object-fit: cover; /* to maintain the aspect ratio of the image */
     position: relative;
 }
 
@@ -439,10 +446,8 @@ a.article:hover {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 5.75rem;
+    left: 1rem;
     right: 0;
-    width: 18.75rem;
-    height: 18.75rem;
     opacity: 0;
     transition: .5s ease;
     background-color: #000;
@@ -523,4 +528,11 @@ a.article:hover {
 .tooltip .tooltip-inner {
     color: #ffffff; /* Colore del testo del tooltip */
     font-family: "Lexend", sans-serif; /* Font del tooltip */
+}
+
+#spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }

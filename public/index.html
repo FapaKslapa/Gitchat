@@ -186,8 +186,7 @@ close
                         <input type="file" accept="image/*" style="display: none;" id="imageProfileInput">
                         <label for="imageProfileInput">
                             <img alt="avatar" id="imgUtenteProfilo"
-                                 class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong upload-image"
-                                 width="300">
+                                 class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong upload-image">
                             <div class="overlay">
                                 <span class="material-symbols-rounded align-middle upload-icon">cloud_upload</span>
                             </div>
@@ -204,11 +203,6 @@ close
                             <div class="col-md-auto">
                                 <h2 data-bs-toggle="tooltip" title="Premi due volte per modificare">Email: <span
                                         id="mailUtenteProfilo"></span></h2>
-                            </div>
-                        </div>
-                        <div class="row justify-content-start mt-3">
-                            <div class="col-md-auto">
-                                <h2>Password: <span id="passwordUtenteProfilo"></span></h2>
                             </div>
                         </div>
                         <div class="row justify-content-start mt-3">
@@ -368,7 +362,14 @@ close
         </div>
     </div>
 </div>
-<div class="container-fluid">
+<div class="container-fluid" id="spinner">
+    <div class="spinner-border"
+         style="width: 30rem; height: 30rem; border: 1rem solid #8044C5; border-right-color: transparent;"
+         role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<div class="container-fluid d-none" id="page">
     <div class="row justify-content-start">
         <div class="col-md-3">
             <div id="sidebar" class="col-auto">
@@ -446,14 +447,14 @@ chat_bubble
                             </button>
 
                             <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button"
-                                    id="buttonFile">
+                                    id="buttonFile" disabled>
                                 <span class="material-symbols-rounded">
 folder
 </span>
                             </button>
 
                             <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button"
-                                    id="buttonGitHub"
+                                    id="buttonGitHub" disabled
                             >
                                 <span class="material-symbols-rounded">
 folder_data
