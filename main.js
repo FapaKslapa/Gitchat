@@ -596,16 +596,19 @@ app.post("/github/codespace", async (req, res) => {
     }
 });
 
-app.get("/chat/:id/hasRepo", (req, res) => {
+app.get("/chat/:id/hasRepo", async (req, res) => {
     const idChat = req.params.id;
     let repoUrl, repoName;
-    getRepoByChatId(idChat).then((res) => {
-        repoUrl = res.Url;
-        repoName = res.Nome;
-        console.log("Url: " + repoUrl + " name: " + repoName);
-    }).catch((res) => {
-        console.log(res);
-    })
+    try {
+      const resp = await getRepoByChatId(idChat);
+      repoUrl = resp.Url;
+      repoName = resp.Nome;
+      console.log("Url: " + repoUrl + " name: " + repoName);
+      res.json({ result: true, url: repoUrl});
+    } catch (error) {
+      console.log(error);
+      res.json({ result: false })
+    }
 });
 
 // Servizio per la modifica dell'immagine del profilo
