@@ -51,6 +51,7 @@ import {
 } from "./server/github.js";
 import fetch from "node-fetch";
 import multer from 'multer';
+import { get } from "https";
 
 const require = createRequire(import.meta.url);
 
@@ -639,6 +640,16 @@ app.get("/chat/:id/hasRepo", async (req, res) => {
       res.json({ result: false })
     }
 });
+
+app.get("/user/:username/hasGithub", async (req, res) => {
+    const username = req.params.username;
+    try {
+        const result = await getGithubUsername(username);
+        res.json({ result: true });
+    } catch (error) {
+        res.json({ result: false });
+    }
+})
 
 // Servizio per la modifica dell'immagine del profilo
 app.put('/user/:username/profile/image', upload.single('images'), async (req, res) => {
