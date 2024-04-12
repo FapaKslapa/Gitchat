@@ -21,7 +21,7 @@ import {
     getChatParticipants,
     getChats,
     getChatUsers,
-    getCodespace,
+    getCodespaceFromDb,
     getFriendsFromDatabase,
     getGithubUsername,
     getMessages,
@@ -37,12 +37,14 @@ import {
     registerUser,
     registerUserGithub,
     rejectFriendship,
+    removeCodespace,
     updateMessage
 } from "./server/database.js";
 import {
     acceptInviteToRepo,
     createCodespace,
     createRepo,
+    getCodespace,
     getFiles,
     getRepoParticipants,
     sendInvite
@@ -596,20 +598,27 @@ app.post("/github/codespace/:id", async (req, res) => {
         console.log("reponame: "+repoName);
         const token1 = await getUserToken(username);
         const token = token1[0].Token;
-        const codespaceUrl = await getCodespace(repoUrl, idChat);
+        const codespaceUrl = await getCodespaceFromDb(repoUrl, idChat);
         console.log(codespaceUrl);
-        if(Object.keys(codespaceUrl).includes("codespace")){
-            res.json({ url: codespaceUrl.codespace });
+        console.log("ghresp get");
+        const codespaces = await getCodespace(token, usernameGithub, repoName);
+        if(codespaces.data.total_count !== 0){
+            if(Object.keys(codespaceUrl).includes("codespace")){
+                res.json({ url: codespaceUrl.codespace });
+            }else{
+                res.json({message: "Something went wrong"});
+            }
         }else{
+            await removeCodespace(repoUrl, idChat);
             const ghResp = await createCodespace(token, usernameGithub, repoName);
             console.log("ghResp");
-            console.log(ghResp);
+            console.log(ghResp.data.web_url);
             if(ghResp.status == 201){
-              console.log("dbres")
-              console.log(await insertCodespace(ghResp.data.web_url));
+              console.log("dbres");
+              console.log(await insertCodespace(ghResp.data.web_url, repoUrl));
               res.json({ message: "Codespace created succesfully" , url: ghResp.data.web_url });
             }
-        } 
+        }
     } catch (error) {
         console.log(error);
         res.json({message: "Something went wrong"});

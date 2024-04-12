@@ -638,7 +638,7 @@ const connectRepository = (name, description, readme, priv) => {
         method: "POST", headers: {
             'content-type': "application/json"
         }, body: JSON.stringify({
-            username: username, repoSpecs: repoSpecs
+            username: getChatOwner(room, chats), repoSpecs: repoSpecs
         })
     }).then((res) => {
         console.log(res.json());
@@ -646,7 +646,7 @@ const connectRepository = (name, description, readme, priv) => {
             method: "POST", headers: {
                 'content-type': "application/json"
             }, body: JSON.stringify({
-                username: username, repo: repoSpecs.name
+                username: getChatOwner(room, chats), repo: repoSpecs.name
             })
         }).then((res) => {
             return res.json();
@@ -685,6 +685,42 @@ const checkRepo = (IdChat) => {
                 }
             })
     })
+}
+
+const getCodespace = (idChat, username) => {
+    return new Promise((resolve, reject) => {
+        fetch("/github/codespace/"+idChat, {
+            method: "POST",
+            headers: {
+                "content-type":"Application/json"
+            },
+            body: JSON.stringify({
+                username: username
+            })
+        }).then((res) => res.json())
+        .then((res) => {
+            console.log("res");
+            console.log(res);
+            if(Object.keys(res).includes("url")){
+                resolve(res);
+            }else{
+                reject("Something went wrong")
+            }
+        }).catch((error) => {
+            reject(error);
+        })
+    })
+    
+}
+
+const getChatOwner = (idChat, chats) => {
+    let chatOwner;
+    chats.forEach((Element) => {
+        if(Element.Id == idChat){
+            chatOwner = Element.Proprietario;
+        }
+    })
+    return chatOwner;
 }
 
 if (params.has("login")) {
@@ -1000,20 +1036,11 @@ buttonRepository.onclick = () => {
 }
 
 buttonOpenCodespace.onclick = () => {
-    fetch("/github/codespace/"+room, {
-        method: "POST",
-        headers: {
-            "content-type":"Application/json"
-        },
-        body: JSON.stringify({
-            username: username
-        })
-    }).then((res) => res.json())
-    .then((res) => {
-        console.log("res");
-        console.log(res)
-    })
-    console.log("vadiocan");
+    getCodespace(room, getChatOwner(room, chats)).then((res) => {
+        window.open(res.url, "_blank").focus();
+    }).catch((error) => {
+        console.log(error);
+    });
 }
 
 document.getElementById("modalRepository").addEventListener("hide.bs.modal", () => {

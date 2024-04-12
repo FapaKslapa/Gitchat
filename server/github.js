@@ -125,6 +125,26 @@ export const createCodespace = async (token, owner, repo) => {
     }
 };
 
+export const getCodespace = async (token, owner, repo) => {
+  try {
+    const octokit = new Octokit({ auth: token });
+    const githubResponse = await octokit.request(
+      `GET /repos/{owner}/{repo}/codespaces`,
+      {
+        owner: owner,
+        repo: repo,
+        headers: {
+          "X-GitHub-Api-Version": "2022-11-28",
+        }
+      }
+    );
+    //console.log(githubResponse);
+    return githubResponse;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 export const getRepoParticipants = async (token, owner, repo) => {
     try {
         const octokit = new Octokit({auth: token});

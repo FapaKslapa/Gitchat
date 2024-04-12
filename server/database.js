@@ -927,17 +927,17 @@ export const deleteChat = (chatId) => {
     });
 };
 
-export const insertCodespace = (url, repoUrl, idChat) => {
+export const insertCodespace = (url, repoUrl) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
-        db.query(getSql, [repoUrl, idChat], (err, result) => {
+        const getSql = `SELECT codespace FROM repository WHERE Url = ?`;
+        db.query(getSql, [repoUrl], (err, result) => {
             if(err){
                 reject(err);
-            }else if(result.length > 0){
-                reject({ message: "No codespace found" });
+            }else if(result[0].codespace != null){
+                reject({ message: "Codespace arlready exists" });
             }else{
-                const sql = `UPDATE repository SET codespace = ? WHERE Url = ? AND IdChat = ?`;
-                db.query(sql, [url, repoUrl, idChat], (err) => {
+                const sql = `UPDATE repository SET codespace = ? WHERE Url = ?`;
+                db.query(sql, [url, repoUrl], (err, result) => {
                     if(err){
                         reject(err);
                     }else{
@@ -955,8 +955,8 @@ export const removeCodespace = (repoUrl, idChat) => {
         db.query(getSql, [repoUrl, idChat], (err, result) => {
             if(err){
                 reject(err);
-            }else if(result.length > 0){
-                reject({ message: "No codespace found" });
+            }else if(result.length == 0){
+                resolve({ message: "No codespace found" });
             }else{
                 const sql = `UPDATE repository SET codespace = NULL WHERE Url = ? AND IdChat = ?`;
                 db.query(sql, [repoUrl, idChat], (err) => {
@@ -971,7 +971,7 @@ export const removeCodespace = (repoUrl, idChat) => {
     })
 }
 
-export const getCodespace = (repoUrl, idChat) => {
+export const getCodespaceFromDb = (repoUrl, idChat) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
         db.query(sql, [repoUrl, idChat], (err, result) => {
