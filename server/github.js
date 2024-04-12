@@ -14,7 +14,7 @@ export const createRepo = async (token, repoSpecs) => {
             name: repoSpecs.name,
             description: repoSpecs.descr,
             private: repoSpecs.private,
-            auto_init: repoSpecs.auto_init,
+            auto_init: true,
             is_template: false,
             Headers: {
                 "X-GitHub-Api-Version": "2022-11-28"
