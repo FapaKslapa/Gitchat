@@ -689,34 +689,34 @@ const checkRepo = (IdChat) => {
 
 const getCodespace = (idChat, username) => {
     return new Promise((resolve, reject) => {
-        fetch("/github/codespace/"+idChat, {
+        fetch("/github/codespace/" + idChat, {
             method: "POST",
             headers: {
-                "content-type":"Application/json"
+                "content-type": "Application/json"
             },
             body: JSON.stringify({
                 username: username
             })
         }).then((res) => res.json())
-        .then((res) => {
-            console.log("res");
-            console.log(res);
-            if(Object.keys(res).includes("url")){
-                resolve(res);
-            }else{
-                reject("Something went wrong")
-            }
-        }).catch((error) => {
+            .then((res) => {
+                console.log("res");
+                console.log(res);
+                if (Object.keys(res).includes("url")) {
+                    resolve(res);
+                } else {
+                    reject("Something went wrong")
+                }
+            }).catch((error) => {
             reject(error);
         })
     })
-    
+
 }
 
 const getChatOwner = (idChat, chats) => {
     let chatOwner;
     chats.forEach((Element) => {
-        if(Element.Id == idChat){
+        if (Element.Id == idChat) {
             chatOwner = Element.Proprietario;
         }
     })
@@ -768,6 +768,7 @@ newChat.onclick = async () => {
     const data = getSelectedFriends();
     await createChat(nomeChat.value, data, username);
     mieChat = await getUserOwnedChats(username);
+    chats = await getUserChats(username);
     chats = await getUserChats(username);
     messageData = [];
     displayMessages(messageData);
@@ -905,12 +906,16 @@ deleteSelectFile.onclick = () => {
 };
 deleteChat.onclick = async () => {
     await deleteChatRoom(room);
+    socket.emit("leaveRoom", room, username);
+    invita.setAttribute('disabled', '');
     mieChat = await getUserOwnedChats(username);
     chats = await getUserChats(username);
     messageData = [];
+    room = "";
+    chatSelezionata = "";
     buttonChat.setAttribute('disabled', '');
-    buttonFile.removeAttribute('disabled');
-    buttonGitHub.removeAttribute('disabled');
+    buttonFile.setAttribute('disabled', '');
+    buttonGitHub.setAttribute('disabled', '');
     messages.classList.remove('d-none');
     displayMessages(messageData);
     gsap.fromTo(form, {autoAlpha: 0}, {autoAlpha: 1, duration: 0.5});
