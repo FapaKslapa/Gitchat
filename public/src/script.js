@@ -1055,8 +1055,9 @@ buttonRepository.onclick = () => {
     console.log("c'è")
     name.classList.add("border-light");
     name.classList.remove("border-danger");
+    const nomeRepository = name.value.replaceAll(" ", "-");
     if (name.value != "") {
-        const result = connectRepository(name.value, descr.value, priv.checked)
+        const result = connectRepository(nomeRepository, descr.value, priv.checked)
         console.log(result);
         modalRepository.hide();
         buttonModal.innerHTML = `Apri Repository
