@@ -605,8 +605,9 @@ app.post("/github/codespace/:id", async (req, res) => {
             console.log("ghResp");
             console.log(ghResp);
             if(ghResp.status == 201){
-                await insertCodespace(ghResp[0].name);
-                res.json({ message: "Codespace created succesfully" , url: ghResp[0].web_url });
+              console.log("dbres")
+              console.log(await insertCodespace(ghResp.data.web_url));
+              res.json({ message: "Codespace created succesfully" , url: ghResp.data.web_url });
             }
         } 
     } catch (error) {
