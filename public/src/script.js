@@ -61,6 +61,7 @@ const buttonModal = document.getElementById("buttonRepository");
 const buttonRepository = document.getElementById("newRepository");
 const buttonOpenCodespace = document.getElementById("buttonGHCodespace");
 const modalRepository = new bootstrap.Modal('#modalRepository');
+const cercaChat = document.getElementById("cercaChat");
 const eventHandlers = {};
 const params = new URLSearchParams(new URL(document.location).search);
 let chatSelezionata = "";
@@ -692,11 +693,9 @@ const checkRepo = (IdChat) => {
 const getCodespace = (idChat, username) => {
     return new Promise((resolve, reject) => {
         fetch("/github/codespace/" + idChat, {
-            method: "POST",
-            headers: {
+            method: "POST", headers: {
                 "content-type": "Application/json"
-            },
-            body: JSON.stringify({
+            }, body: JSON.stringify({
                 username: username
             })
         }).then((res) => res.json())
@@ -1192,4 +1191,75 @@ const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
     });
 
     return tooltip;
+});
+
+cercaChat.addEventListener('input', function () {
+    const searchValue = this.value.toLowerCase();
+    const filteredChats = chats.filter(chat => chat.NomeChat.toLowerCase().startsWith(searchValue));
+    listChat.innerHTML = filteredChats
+        .map((chat) => {
+            const usernames = chat.users.map(user => user.username).join(", ");
+            return `<li id="chat_${chat.IdChat}"><a>${chat.NomeChat}
+                    <p>${usernames}</p></a>
+                    </li>`;
+        })
+        .join("");
+    renderChat(filteredChats);
+});
+
+const cercaMessaggio = document.getElementById('cercaMessaggio');
+const nextMessage = document.getElementById('nextMessage');
+const previousMessage = document.getElementById('previousMessage');
+let currentMessageIndex = 0;
+let matchingMessages = [];
+let inputHasFocus = false;
+
+cercaMessaggio.addEventListener('focus', function () {
+    inputHasFocus = true;
+});
+
+cercaMessaggio.addEventListener('blur', function () {
+    inputHasFocus = false;
+});
+cercaMessaggio.addEventListener('input', function () {
+    const searchValue = this.value.toLowerCase();
+    if (searchValue !== '' && inputHasFocus) {
+        matchingMessages = Array.from(document.querySelectorAll('#messages li'))
+            .reverse()
+            .filter((message) => {
+                return message.textContent.toLowerCase().includes(searchValue);
+            });
+
+        if (matchingMessages.length > 0) {
+            matchingMessages[currentMessageIndex].scrollIntoView();
+            nextMessage.removeAttribute('disabled');
+            previousMessage.removeAttribute('disabled');
+        } else {
+            nextMessage.setAttribute('disabled', '');
+            previousMessage.setAttribute('disabled', '');
+        }
+    } else {
+        nextMessage.setAttribute('disabled', '');
+        previousMessage.setAttribute('disabled', '');
+        // Scroll to bottom if input is empty
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+});
+
+// Add focus event listener to execute search immediately when input gets focus
+cercaMessaggio.addEventListener('focus', function () {
+    this.dispatchEvent(new Event('input'));
+});
+nextMessage.addEventListener('click', function () {
+    if (currentMessageIndex < matchingMessages.length - 1) {
+        currentMessageIndex++;
+        matchingMessages[currentMessageIndex].scrollIntoView();
+    }
+});
+
+previousMessage.addEventListener('click', function () {
+    if (currentMessageIndex > 0) {
+        currentMessageIndex--;
+        matchingMessages[currentMessageIndex].scrollIntoView();
+    }
 });

@@ -300,19 +300,6 @@ close
                         <div class="col-md-6 align-middle">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <div class="form-check align-middle">
-                                        <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                value=""
-                                                id="readMe"
-                                        />
-                                        <label class="form-check-label" for="readMe">
-                                            Aggiungi README
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
                                     <div class="form-check form-switch">
                                         <input
                                                 class="form-check-input"
@@ -379,6 +366,7 @@ close
                     <div class="col">
                         <input class="form-control align-self-center border-0"
                                type="search"
+                               id="cercaChat"
                                placeholder="Search" aria-label="Search">
                     </div>
                     <div class="col-auto">
@@ -438,9 +426,16 @@ close
                 <nav class="navbar">
                     <div class="container-fluid justify-content-end">
                         <div class="d-flex">
-                            <input class="form-control me-2 form-ricerca mx-auto align-self-center border-0"
-                                   type="search"
-                                   placeholder="Search" aria-label="Search">
+                            <div class="d-flex align-items-center">
+                                <input class="form-control me-2 form-ricerca mx-auto align-self-center border-0"
+                                       type="search"
+                                       placeholder="Search" aria-label="Search" id="cercaMessaggio">
+                                <button class="btn btn-transparent btn-sm" id="nextMessage" disabled><i
+                                        class="material-symbols-rounded align-middle">arrow_drop_up</i></button>
+                                <button class="btn btn-transparent btn-sm" id="previousMessage" disabled><i
+                                        class="material-symbols-rounded align-middle">arrow_drop_down</i>
+                                </button>
+                            </div>
                             <button class="btn btn-light btn-circle-nav me-3 align-middle" type="button"
                                     id="buttonChat" disabled>
                                 <span class="material-symbols-rounded align-middle">

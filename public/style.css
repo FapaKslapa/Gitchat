@@ -536,3 +536,18 @@ a.article:hover {
     align-items: center;
     height: 100vh;
 }
+
+/* Rimuove il bordo quando il pulsante è disabilitato */
+#nextMessage:disabled, #previousMessage:disabled {
+    border: none;
+}
+
+/* Rimuove il bordo quando il pulsante viene cliccato */
+#nextMessage:active, #previousMessage:active {
+    outline: none;
+}
+
+.highlight {
+    background-color: #8044C5; /* Viola */
+    color: white; /* Testo bianco */
+}
