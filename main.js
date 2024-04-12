@@ -391,7 +391,7 @@ app.delete("/chat/:id", async (req, res) => {
 app.get("/github/login", (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = "http://localhost:3000/github/callback";
-    const scope = "repo";
+    const scope = "repo%20codespace";
     const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=login`;
     res.json({url: url});
 });
@@ -399,7 +399,7 @@ app.get("/github/login", (req, res) => {
 app.get("/github/register", (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = "http://localhost:3000/github/callback";
-    const scope = "repo";
+    const scope = "repo%20codespace";
     const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=register`;
     res.json({url: url});
 });
@@ -407,7 +407,7 @@ app.get("/github/register", (req, res) => {
 app.get("/github/connect/:username", (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = "http://localhost:3000/github/callback";
-    const scope = "repo";
+    const scope = "repo%20codespace";
     const state = req.params.username;
     const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=${scope}&state=${state}`;
     res.json({url: url});
