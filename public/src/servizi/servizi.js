@@ -286,3 +286,123 @@ export async function updateUserEmail(username, newEmail) {
 
     return await response.json();
 }
+
+/**
+ * Funzione che crea una repository su github
+ * @param {string} name - Il nome della repository
+ * @param {string} description - La descrizione della repository
+ * @param {boolean} priv - Determina se la repository sia pubblica o privata
+ */
+export const connectRepository = (name, description, priv) => {
+    const repoSpecs = {
+        name: name, descr: description, private: priv
+    };
+
+    fetch("/github/createRepo/" + room, {
+        method: "POST", headers: {
+            'content-type': "application/json"
+        }, body: JSON.stringify({
+            username: getChatOwner(room, chats), repoSpecs: repoSpecs
+        })
+    }).then((res) => {
+        console.log(res.json());
+        fetch("/github/sendInvites/" + room, {
+            method: "POST", headers: {
+                'content-type': "application/json"
+            }, body: JSON.stringify({
+                username: getChatOwner(room, chats), repo: repoSpecs.name
+            })
+        }).then((res) => {
+            return res.json();
+        })
+    })
+}
+
+/**
+ * Funzione che aggiunge tutti i partecipanti di una chat alla repository ad essa connessa
+ * @param {*} room - L'ID della chat
+ * @param {*} repoName - Il nome della repository
+ */
+export const sendInvites = (room, repoName) => {
+    console.log("mava")
+    fetch("/github/sendInvites/" + room, {
+        method: "POST", headers: {
+            'content-type': "application/json"
+        }, body: JSON.stringify({
+            username: username, repo: repoName
+        })
+    }).then((res) => {
+        return res.json();
+    })
+}
+
+/**
+ * Funzione che controlla se una chat ha una repository associata
+ * @param {string} IdChat - L'ID della chat
+ * @returns - L'indirizzo della repository se è presente, false se non lo è
+ */
+export const checkRepo = (IdChat) => {
+    return new Promise((resolve, reject) => {
+        fetch(`/chat/${IdChat}/hasRepo`, {
+            method: "GET", headers: {
+                'content-type': "Application/json"
+            }
+        })
+            .then((res) => res.json())
+            .then((res) => {
+                console.log("res")
+                console.log(res.result)
+                if (res.result) {
+                    resolve(res.url);
+                } else {
+                    reject(false);
+                }
+            })
+    })
+}
+
+/**
+ * Funzione che apre un codespace nella repository associata ad una chat
+ * @param {string} idChat - L'ID della chat
+ * @param {*} username - Lo username del proprietario della repository
+ * @returns L'URL del codespace
+ */
+export const getCodespace = (idChat, username) => {
+    return new Promise((resolve, reject) => {
+        fetch("/github/codespace/" + idChat, {
+            method: "POST", headers: {
+                "content-type": "Application/json"
+            }, body: JSON.stringify({
+                username: username
+            })
+        }).then((res) => res.json())
+            .then((res) => {
+                console.log("res");
+                console.log(res);
+                if (Object.keys(res).includes("url")) {
+                    resolve(res);
+                } else {
+                    reject("Something went wrong")
+                }
+            }).catch((error) => {
+            reject(error);
+        })
+    })
+
+}
+
+/**
+ * Funzione che controlla se un utente ha collegato il suo account a Github
+ * @param {string} username - Lo username dell'utente
+ * @returns boolean
+ */
+export const userHasGithub = (username) => {
+    return new Promise((resolve, reject) => {
+        fetch(`/user/${username}/hasGithub`, {
+            method: "GET",
+            headers: {
+                'content-type': "Applicatio/json"
+            }
+        }).then((res) => res.json() ).then((res) => resolve(res))
+    })
+}

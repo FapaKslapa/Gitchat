@@ -391,6 +391,9 @@ app.delete("/chat/:id", async (req, res) => {
     }
 });
 
+/**
+ * Servizio che manda il link a cui autenticarsi su Github
+ */
 app.get("/github/login", (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = "http://localhost:3000/github/callback";
@@ -407,6 +410,10 @@ app.get("/github/register", (req, res) => {
     res.json({url: url});
 });
 
+/**
+ * Servizio che manda il link a cui autenticarsi su Github per connettere l'account
+ * @param {string} username - Lo username dell'utente da connettere
+ */
 app.get("/github/connect/:username", (req, res) => {
     const client_id = gitConfig.client_id;
     const redirect_uri = "http://localhost:3000/github/callback";
@@ -416,6 +423,9 @@ app.get("/github/connect/:username", (req, res) => {
     res.json({url: url});
 });
 
+/**
+ * Il servizio che gestisce il ritorno dall'autenticazione su Github salvando il token dell'utente autenticato
+ */
 app.get("/github/callback", async (req, res) => {
     const code = req.query.code;
     const client_id = gitConfig.client_id;
@@ -449,10 +459,7 @@ app.get("/github/callback", async (req, res) => {
     });
 
     const userData = await userResponse.json();
-    //console.log(userData);
     // Adesso hai accesso ai dati dell'utente e puoi salvarli nel database
-    // ...
-    console.log("state: " + state);
     if (state === "login") {
         try {
             let username = await loginUserGithub(userData.login);
@@ -498,6 +505,12 @@ app.get("/github/callback", async (req, res) => {
     //res.json({url: 'http://localhost:3000/index.html'});
 });
 
+/**
+ * Il servizio che crea una repository su GH e ne salva i riferimenti sul DB
+ * @param {string} id - L'ID della chat interessata
+ * @param {string} username - Lo username del proprietario della repository
+ * @param {Object} repoSpecs - I parametri per la creazione della repository
+ */
 app.post("/github/createRepo/:id", async (req, res) => {
     try {
         const username = req.body.username;
@@ -506,20 +519,16 @@ app.post("/github/createRepo/:id", async (req, res) => {
         const token1 = await getUserToken(username);
         const token = token1[0].Token;
         const ghRes = await createRepo(token, repoSpecs);
-        console.log("ghres")
-        console.log(Object.keys(ghRes));
-        console.log("fullname")
-        console.log(ghRes.fullname);
         const dbRes = await insertRepo(repoSpecs, ghRes.fullname, idChat);
-        console.log("dbRes");
-        console.log(dbRes)
         res.json({message: "Repo created Succesfully"});
     } catch (error) {
-        console.log(error);
         res.json({message: "Something went wrong"});
     }
 });
 
+/**
+ * 
+ */
 app.get("/github/content", async (req, res) => {
     try {
         const token1 = await getUserToken("Mael");
@@ -532,7 +541,12 @@ app.get("/github/content", async (req, res) => {
     }
 });
 
-//modifica che manda a tutti
+/**
+ * Servizio che aggiunge tutti i membri di una chat alla repository (se presente) ad essa associata
+ * @param {string} id - L'ID della chat interessata
+ * @param {string} username - Lo username del proprietario della repository
+ * @param {string} repoName - Il nome della repository
+ */
 app.post("/github/sendInvites/:id", async (req, res) => {
     const username = req.body.username;
     const repo = req.body.repo;
@@ -580,13 +594,11 @@ app.post("/github/sendInvites/:id", async (req, res) => {
     }
 });
 
-app.post("/github/acceptInvite", async (req, res) => {
-    const username = req.body.username;
-    const token1 = await getUserToken(username);
-    const token = token1[0].Token;
-    acceptInviteToRepo(token, 250182506);
-});
-
+/**
+ * Servizio che apre un codespace nella repository di una chat
+ * @param {string} id - L'ID della chat interessata
+ * @param {string} username - Lo username del proprietario della repository
+ */
 app.post("/github/codespace/:id", async (req, res) => {
     const username = req.body.username;
     const idChat = req.params.id;
@@ -626,6 +638,10 @@ app.post("/github/codespace/:id", async (req, res) => {
     }
 });
 
+/**
+ * Servizio che controlla se una chat ha una repository associata
+ * @param {string} id - L'ID della chat interessata
+ */
 app.get("/chat/:id/hasRepo", async (req, res) => {
     const idChat = req.params.id;
     let repoUrl, repoName;
@@ -633,14 +649,16 @@ app.get("/chat/:id/hasRepo", async (req, res) => {
       const resp = await getRepoByChatId(idChat);
       repoUrl = resp.Url;
       repoName = resp.Nome;
-      console.log("Url: " + repoUrl + " name: " + repoName);
       res.json({ result: true, url: repoUrl});
     } catch (error) {
-      console.log(error);
       res.json({ result: false })
     }
 });
 
+/**
+ * Servizio che controlla se un utente ha un account di github associato
+ * @param {string} username - Lo username dell'utente interessato
+ */
 app.get("/user/:username/hasGithub", async (req, res) => {
     const username = req.params.username;
     try {

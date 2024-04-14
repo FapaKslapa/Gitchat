@@ -6,6 +6,12 @@ const require = createRequire(import.meta.url);
 const {Octokit, App} = require("octokit");
 
 //{ name: name, descr: descr, homepage: homepage }
+/**
+ * Funzione che crea una repository su GH
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {Object} repoSpecs - Un oggetto che contiene le specifiche per l'inizializzazione di una repository
+ * @returns L'ID della repository
+ */
 export const createRepo = async (token, repoSpecs) => {
     const octokit = new Octokit({auth: token});
     try {
@@ -34,6 +40,11 @@ export const createRepo = async (token, repoSpecs) => {
     }
 };
 
+/**
+ * Funzione che accetta un invito ad una repository
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {*} invitationId - L'ID dell'invito da accettare
+ */
 export const acceptInviteToRepo = async (token, invitationId) => {
     try {
         const octokit = new Octokit({
@@ -57,6 +68,14 @@ export const acceptInviteToRepo = async (token, invitationId) => {
     }
 };
 
+/**
+ * Funzione che manda un invito ad una repository ad un altro utente
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {string} owner - Lo username del proprietario della repository
+ * @param {string} repo - Il nome della repository
+ * @param {string} user - Lo username dell'utenete a cui mandare l'invito
+ * @returns la conferma dell'API
+ */
 export const sendInvite = async (token, owner, repo, user) => {
     try {
         const octokit = new Octokit({
@@ -104,6 +123,13 @@ export const getFiles = async (token, owner, repo, path) => {
     }
 };
 
+/**
+ * Funzione che crea un codespace nella repository
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {string} owner - Lo username del proprietario della repository
+ * @param {string} repo - Il nome della repository
+ * @returns la conferma dell'API
+ */
 export const createCodespace = async (token, owner, repo) => {
     try {
         const octokit = new Octokit({auth: token});
@@ -125,6 +151,13 @@ export const createCodespace = async (token, owner, repo) => {
     }
 };
 
+/**
+ * Funzione che recupera i codespace presenti in una repository
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {string} owner - Lo username del proprietario della repository
+ * @param {string} repo - Il nome della repository
+ * @returns La lista dei codespace presenti in quella repository
+ */
 export const getCodespace = async (token, owner, repo) => {
   try {
     const octokit = new Octokit({ auth: token });
@@ -145,6 +178,13 @@ export const getCodespace = async (token, owner, repo) => {
   }
 }
 
+/**
+ * Funzione che recupera i nomi dei partecipanti alla repository
+ * @param {string} token - Il token di un utente per accedere all'API di GH
+ * @param {string} owner - Lo username del proprietario della repository
+ * @param {string} repo - Il nome della repository
+ * @returns La lista dei paretecipanti alla repository
+ */
 export const getRepoParticipants = async (token, owner, repo) => {
     try {
         const octokit = new Octokit({auth: token});

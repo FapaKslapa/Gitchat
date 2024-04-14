@@ -638,89 +638,6 @@ const renderPartecipanti = (partecipanti) => {
         });
     });
 }
-
-const connectRepository = (name, description, priv) => {
-    const repoSpecs = {
-        name: name, descr: description, private: priv
-    };
-
-    fetch("/github/createRepo/" + room, {
-        method: "POST", headers: {
-            'content-type': "application/json"
-        }, body: JSON.stringify({
-            username: getChatOwner(room, chats), repoSpecs: repoSpecs
-        })
-    }).then((res) => {
-        console.log(res.json());
-        fetch("/github/sendInvites/" + room, {
-            method: "POST", headers: {
-                'content-type': "application/json"
-            }, body: JSON.stringify({
-                username: getChatOwner(room, chats), repo: repoSpecs.name
-            })
-        }).then((res) => {
-            return res.json();
-        })
-    })
-}
-
-const sendInvites = (room, repoName) => {
-    console.log("mava")
-    fetch("/github/sendInvites/" + room, {
-        method: "POST", headers: {
-            'content-type': "application/json"
-        }, body: JSON.stringify({
-            username: username, repo: repoName
-        })
-    }).then((res) => {
-        return res.json();
-    })
-}
-
-const checkRepo = (IdChat) => {
-    return new Promise((resolve, reject) => {
-        fetch(`/chat/${IdChat}/hasRepo`, {
-            method: "GET", headers: {
-                'content-type': "Application/json"
-            }
-        })
-            .then((res) => res.json())
-            .then((res) => {
-                console.log("res")
-                console.log(res.result)
-                if (res.result) {
-                    resolve(res.url);
-                } else {
-                    reject(false);
-                }
-            })
-    })
-}
-
-const getCodespace = (idChat, username) => {
-    return new Promise((resolve, reject) => {
-        fetch("/github/codespace/" + idChat, {
-            method: "POST", headers: {
-                "content-type": "Application/json"
-            }, body: JSON.stringify({
-                username: username
-            })
-        }).then((res) => res.json())
-            .then((res) => {
-                console.log("res");
-                console.log(res);
-                if (Object.keys(res).includes("url")) {
-                    resolve(res);
-                } else {
-                    reject("Something went wrong")
-                }
-            }).catch((error) => {
-            reject(error);
-        })
-    })
-
-}
-
 const getChatOwner = (idChat, chats) => {
     let chatOwner;
     chats.forEach((Element) => {
@@ -731,16 +648,6 @@ const getChatOwner = (idChat, chats) => {
     return chatOwner;
 }
 
-const userHasGithub = (username) => {
-    return new Promise((resolve, reject) => {
-        fetch(`/user/${username}/hasGithub`, {
-            method: "GET",
-            headers: {
-                'content-type': "Applicatio/json"
-            }
-        }).then((res) => res.json() ).then((res) => resolve(res))
-    })
-}
 
 if (params.has("login")) {
     if (params.get("login") != "failed") {

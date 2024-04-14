@@ -688,6 +688,12 @@ export const getChatFileMessages = (chatId) => {
     });
 };
 
+/**
+ * Funzione che aggiunge lo username di github ad un account
+ * @param {string} username - Lo username dell'accout a cui verrà aggiunto lo username di GH
+ * @param {string} usernameGit - Lo username di GH da aggiungere
+ * @returns L'esito dell'operazione
+ */
 export const addGitUsernameToUser = (username, usernameGit) => {
     return new Promise((resolve, reject) => {
         const getSql = `SELECT Username
@@ -733,6 +739,12 @@ export const addGitUsernameToUser = (username, usernameGit) => {
     })
 }
 
+/**
+ * Funzione che aggiunge un token a un account di un utente
+ * @param {string} username - Lo username dell'accout a cui verrà aggiunto il token di GH
+ * @param {string} token - il token che verrà aggiunto
+ * @returns L'esito dell'operazione
+ */
 export const addTokenToUser = (username, token) => {
     return new Promise((resolve, reject) => {
         const getSql = `SELECT Token
@@ -760,6 +772,11 @@ export const addTokenToUser = (username, token) => {
     });
 }
 
+/**
+ * Funzione che recupera il token di un utente
+ * @param {string} username - Lo username da cui bisogna recuperare il token
+ * @returns Il token di accesso a GH
+ */
 export const getUserToken = (username) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT account_github.Token
@@ -779,6 +796,11 @@ export const getUserToken = (username) => {
     });
 };
 
+/**
+ * Funzione che recupera lo username di GH di un account
+ * @param {string} username - Lo username da cui bisogna recuperare lo username di GH
+ * @returns Lo username di GH se presente
+ */
 export const getGithubUsername = (username) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT account_github.Username
@@ -798,6 +820,13 @@ export const getGithubUsername = (username) => {
 }
 
 //{ url: url, id: idChat, name, name}
+/**
+ * Funzione che inserisce i dati di una repository nel DB
+ * @param {Object} repoSpecs - i dati della repository
+ * @param {*} url - L'URL della repository
+ * @param {*} idChat - L'ID della chat associata alla repository
+ * @returns L'esito dell'operazione
+ */
 export const insertRepo = (repoSpecs, url, idChat) => {
     return new Promise((resolve, reject) => {
         const getSql = `SELECT Url, IdChat
@@ -823,6 +852,11 @@ export const insertRepo = (repoSpecs, url, idChat) => {
     })
 }
 
+/**
+ * Fuzione che recupera l'URl di una repository
+ * @param {string} repoName - Il nome ella repository
+ * @returns l'URL della repository se presente
+ */
 export const getRepo = (repoName) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT Url
@@ -840,6 +874,11 @@ export const getRepo = (repoName) => {
     })
 }
 
+/**
+ * Funzione che recupera i dati di una repository dall'id della chat ad essa associata
+ * @param {*} IdChat - L'ID della chat a cui la preository è associata
+ * @returns i dati della repository se presente
+ */
 export const getRepoByChatId = (IdChat) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT Url, Nome
@@ -927,6 +966,12 @@ export const deleteChat = (chatId) => {
     });
 };
 
+/**
+ * Funzione che inserisce un codespace nel DB
+ * @param {string} url - L'URL del codespace
+ * @param {string} repoUrl - L'URL della repository
+ * @returns L'esito dell'operazione
+ */
 export const insertCodespace = (url, repoUrl) => {
     return new Promise((resolve, reject) => {
         const getSql = `SELECT codespace FROM repository WHERE Url = ?`;
@@ -971,6 +1016,12 @@ export const removeCodespace = (repoUrl, idChat) => {
     })
 }
 
+/**
+ * Funzione che recupera l'URL del codespace associato ad una repository
+ * @param {string} repoUrl - L'URL della repository
+ * @param {string} idChat - L'ID della chat
+ * @returns L'URL del codespace se presente
+ */
 export const getCodespaceFromDb = (repoUrl, idChat) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
