@@ -664,7 +664,20 @@ export const getUserDetails = (username) => {
         });
     });
 };
-
+export const getUser = (username) => {
+    console.log(username);
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT Username, Password
+                     FROM account
+                     WHERE Username = ?`;
+        db.query(sql, [username], (err, result) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(result[0]);
+        });
+    });
+}
 export const getChatFileMessages = (chatId) => {
     return new Promise((resolve, reject) => {
         const sql = `SELECT *
@@ -974,19 +987,23 @@ export const deleteChat = (chatId) => {
  */
 export const insertCodespace = (url, repoUrl) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT codespace FROM repository WHERE Url = ?`;
+        const getSql = `SELECT codespace
+                        FROM repository
+                        WHERE Url = ?`;
         db.query(getSql, [repoUrl], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result[0].codespace != null){
-                reject({ message: "Codespace arlready exists" });
-            }else{
-                const sql = `UPDATE repository SET codespace = ? WHERE Url = ?`;
+            } else if (result[0].codespace != null) {
+                reject({message: "Codespace arlready exists"});
+            } else {
+                const sql = `UPDATE repository
+                             SET codespace = ?
+                             WHERE Url = ?`;
                 db.query(sql, [url, repoUrl], (err, result) => {
-                    if(err){
+                    if (err) {
                         reject(err);
-                    }else{
-                        resolve({ message: "Codespace inserted successfully" });
+                    } else {
+                        resolve({message: "Codespace inserted successfully"});
                     }
                 })
             }
@@ -996,19 +1013,25 @@ export const insertCodespace = (url, repoUrl) => {
 
 export const removeCodespace = (repoUrl, idChat) => {
     return new Promise((resolve, reject) => {
-        const getSql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
+        const getSql = `SELECT codespace
+                        FROM repository
+                        WHERE Url = ?
+                          AND IdChat = ?`;
         db.query(getSql, [repoUrl, idChat], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length == 0){
-                resolve({ message: "No codespace found" });
-            }else{
-                const sql = `UPDATE repository SET codespace = NULL WHERE Url = ? AND IdChat = ?`;
+            } else if (result.length == 0) {
+                resolve({message: "No codespace found"});
+            } else {
+                const sql = `UPDATE repository
+                             SET codespace = NULL
+                             WHERE Url = ?
+                               AND IdChat = ?`;
                 db.query(sql, [repoUrl, idChat], (err) => {
-                    if(err){
+                    if (err) {
                         reject(err);
-                    }else{
-                        resolve({ message: "Codespace removed successfully" });
+                    } else {
+                        resolve({message: "Codespace removed successfully"});
                     }
                 })
             }
@@ -1024,13 +1047,16 @@ export const removeCodespace = (repoUrl, idChat) => {
  */
 export const getCodespaceFromDb = (repoUrl, idChat) => {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT codespace FROM repository WHERE Url = ? AND IdChat = ?`;
+        const sql = `SELECT codespace
+                     FROM repository
+                     WHERE Url = ?
+                       AND IdChat = ?`;
         db.query(sql, [repoUrl, idChat], (err, result) => {
-            if(err){
+            if (err) {
                 reject(err);
-            }else if(result.length == 0 || result[0].codespace == null){
-                resolve({ message: "No codespace found" });
-            }else{
+            } else if (result.length == 0 || result[0].codespace == null) {
+                resolve({message: "No codespace found"});
+            } else {
                 resolve(result[0]);
             }
         })

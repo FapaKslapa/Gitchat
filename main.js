@@ -1,5 +1,6 @@
 // Importa il modulo mysql
 import {createRequire} from "module";
+import bcrypt from 'bcrypt';
 import {socketFunction} from "./server/socket.js";
 import {
     acceptFriendship,
@@ -27,7 +28,7 @@ import {
     getMessages,
     getOwnedChats,
     getRepoByChatId,
-    getUnacceptedFriendships,
+    getUnacceptedFriendships, getUser,
     getUserDetails,
     getUserToken,
     insertCodespace,
@@ -41,17 +42,11 @@ import {
     updateMessage
 } from "./server/database.js";
 import {
-    acceptInviteToRepo,
-    createCodespace,
-    createRepo,
-    getCodespace,
-    getFiles,
-    getRepoParticipants,
-    sendInvite
+    acceptInviteToRepo, createCodespace, createRepo, getCodespace, getFiles, getRepoParticipants, sendInvite
 } from "./server/github.js";
 import fetch from "node-fetch";
 import multer from 'multer';
-import { get } from "https";
+import {get} from "https";
 
 const require = createRequire(import.meta.url);
 
@@ -75,8 +70,7 @@ let temporaryMessages = {};
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './images');
-    },
-    filename: function (req, file, cb) {
+    }, filename: function (req, file, cb) {
         const timestamp = Date.now();
         const filename = `${timestamp}_${file.originalname}`;
         cb(null, filename);
@@ -103,14 +97,8 @@ db.connect(err => {
 
 io.on("connection", async socket => {
     console.log("a user connected");
-    socket.on(
-        "join room",
-        await socketFunction.onJoinRoom(socket, temporaryMessages)
-    );
-    socket.on(
-        "chat message",
-        await socketFunction.onChatMessage(socket, io, temporaryMessages)
-    );
+    socket.on("join room", await socketFunction.onJoinRoom(socket, temporaryMessages));
+    socket.on("chat message", await socketFunction.onChatMessage(socket, io, temporaryMessages));
     socket.on("file", socketFunction.onFile(socket, io, temporaryMessages));
     socket.on("leaveRoom", socketFunction.onLeaveRoom(socket, temporaryMessages));
     socket.on("disconnect", socketFunction.onDisconnect());
@@ -118,6 +106,13 @@ io.on("connection", async socket => {
 });
 //SERVIZI
 
+/**
+ * Endpoint per ottenere i messaggi di una chat.
+ *
+ * @param {string} req.params.id - L'ID della chat da cui ottenere i messaggi.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i messaggi della chat o un messaggio di errore.
+ */
 app.get("/chat/:id/messages", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -128,6 +123,13 @@ app.get("/chat/:id/messages", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
+/**
+ * Endpoint per ottenere le chat di un utente.
+ *
+ * @param {string} req.params.username - Il nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene le chat dell'utente o un messaggio di errore.
+ */
 app.get("/user/:username/chats", async (req, res) => {
     try {
         const username = req.params.username;
@@ -149,6 +151,13 @@ app.get("/user/:username/chats", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
+/**
+ * Endpoint per ottenere gli amici di un utente.
+ *
+ * @param {string} req.params.username - Il nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene gli amici dell'utente o un messaggio di errore.
+ */
 app.get("/user/:username/friends", async (req, res) => {
     try {
         const username = req.params.username;
@@ -159,6 +168,13 @@ app.get("/user/:username/friends", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
+/**
+ * Endpoint per ottenere i partecipanti di una chat.
+ *
+ * @param {string} req.params.id - L'ID della chat da cui ottenere i partecipanti.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i partecipanti della chat o un messaggio di errore.
+ */
 app.get("/chat/:id/participants", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -169,6 +185,14 @@ app.get("/chat/:id/participants", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per aggiungere utenti a una chat esistente.
+ *
+ * @param {string} req.params.id - L'ID della chat a cui aggiungere gli utenti.
+ * @param {Array<string>} req.body.users - Un array di nomi utente da aggiungere alla chat.
+ *
+ * @returns {Object} Un oggetto JSON che contiene il risultato dell'operazione o un messaggio di errore.
+ */
 app.post("/chat", async (req, res) => {
     try {
         const {users, nomeChat, proprietario} = req.body;
@@ -192,6 +216,15 @@ app.post("/chat/:id/users", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
+
+/**
+ * Endpoint per aggiungere un utente a una chat.
+ *
+ * @param {string} req.params.id - L'ID della chat a cui aggiungere l'utente.
+ * @param {string} req.body.username - Il nome dell'utente da aggiungere alla chat.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.post("/chat/:id/user", (req, res) => {
     const chatId = req.params.id;
     const {username} = req.body;
@@ -204,6 +237,14 @@ app.post("/chat/:id/user", (req, res) => {
     });
 });
 
+/**
+ * Endpoint per eliminare un utente da una chat.
+ *
+ * @param {string} req.params.id - L'ID della chat da cui eliminare l'utente.
+ * @param {string} req.body.username - Il nome dell'utente da eliminare dalla chat.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.delete("/deleteChat/:id/user", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -215,23 +256,38 @@ app.delete("/deleteChat/:id/user", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per creare un nuovo messaggio.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.Path - Il percorso del file del messaggio (se presente).
+ * @param {string} req.body.Testo - Il testo del messaggio.
+ * @param {string} req.body.Data_invio - La data di invio del messaggio.
+ * @param {string} req.body.Ora_invio - L'ora di invio del messaggio.
+ * @param {string} req.body.IdAutore - L'ID dell'autore del messaggio.
+ * @param {string} req.body.IdChat - L'ID della chat in cui viene inviato il messaggio.
+ *
+ * @returns {Object} Un oggetto JSON che contiene il risultato dell'operazione o un messaggio di errore.
+ */
 app.post("/message", async (req, res) => {
     try {
         const {Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat} = req.body;
-        const result = await createMessage(
-            Path,
-            Testo,
-            Data_invio,
-            Ora_invio,
-            IdAutore,
-            IdChat
-        );
+        const result = await createMessage(Path, Testo, Data_invio, Ora_invio, IdAutore, IdChat);
         res.json(result);
     } catch (err) {
         res.json({message: "Errore"});
     }
 });
-// Aggiungere un'amicizia
+
+/**
+ * Endpoint per aggiungere un'amicizia.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.username1 - Il nome dell'utente che invia la richiesta di amicizia.
+ * @param {string} req.body.username2 - Il nome dell'utente che riceve la richiesta di amicizia.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.post("/friendship", async (req, res) => {
     try {
         const {username1, username2} = req.body;
@@ -241,8 +297,14 @@ app.post("/friendship", async (req, res) => {
         res.status(400).json(err);
     }
 });
-// Modificare un messaggio
-
+/**
+ * Endpoint per aggiornare il testo di un messaggio.
+ *
+ * @param {string} req.params.id - L'ID del messaggio da aggiornare.
+ * @param {string} req.body.newText - Il nuovo testo del messaggio.
+ *
+ * @returns {Object} Un oggetto JSON che contiene il risultato dell'operazione o un messaggio di errore.
+ */
 app.put("/message/:id", async (req, res) => {
     try {
         const messageId = req.params.id;
@@ -253,8 +315,13 @@ app.put("/message/:id", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
-// Eliminare un messaggio
-app.delete("/message/:id", async (req, res) => {
+/**
+ * Endpoint per eliminare un messaggio.
+ *
+ * @param {string} req.params.id - L'ID del messaggio da eliminare.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */app.delete("/message/:id", async (req, res) => {
     try {
         const messageId = req.params.id;
         const result = await deleteMessage(messageId);
@@ -263,26 +330,66 @@ app.delete("/message/:id", async (req, res) => {
         res.json({message: "Errore"});
     }
 });
-// Login
+/**
+ * Endpoint per effettuare il login di un utente.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.username - Il nome dell'utente.
+ * @param {string} req.body.password - La password dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i dati dell'utente se il login è riuscito, o un messaggio di errore.
+ */
 app.post("/login", async (req, res) => {
     try {
         const {username, password} = req.body;
-        const result = await loginUser(username, password);
-        res.json(result);
+        const user = await getUser(username); // Funzione per ottenere l'utente dal database
+        console.log("FATTO");
+        if (!user) {
+            return res.status(400).json({message: "Utente non trovato"});
+        }
+
+        const validPassword = await bcrypt.compare(password, user.Password);
+        if (!validPassword) {
+            console.log(false);
+            return res.status(400).json({message: "Password non valida"});
+        }
+        console.log(true);
+        res.json({login: true});
     } catch (err) {
         res.json({message: "Errore"});
     }
 });
+/**
+ * Endpoint per registrare un nuovo utente.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.mail - L'email dell'utente.
+ * @param {string} req.body.username - Il nome dell'utente.
+ * @param {string} req.body.password - La password dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.post("/register", async (req, res) => {
     try {
         const {mail, username, password} = req.body;
-        const result = await registerUser(mail, username, password);
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const result = await registerUser(mail, username, hashedPassword); // Funzione per registrare l'utente nel database
+
         res.json(result);
     } catch (err) {
         res.status(400).json(err);
     }
 });
-
+/**
+ * Endpoint per ottenere le richieste di amicizia non accettate di un utente.
+ *
+ * @param {string} username - Il nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene le richieste di amicizia non accettate dell'utente o un messaggio di errore.
+ */
 app.get("/user/:username/unaccepted-friendships", async (req, res) => {
     try {
         const username = req.params.username;
@@ -293,6 +400,15 @@ app.get("/user/:username/unaccepted-friendships", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per accettare una richiesta di amicizia.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.username1 - Il nome dell'utente che ha inviato la richiesta di amicizia.
+ * @param {string} req.body.username2 - Il nome dell'utente che ha ricevuto la richiesta di amicizia.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.put("/friendship/accept", async (req, res) => {
     try {
         const {username1, username2} = req.body;
@@ -303,6 +419,15 @@ app.put("/friendship/accept", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per rifiutare una richiesta di amicizia.
+ *
+ * @param {Object} req.body - Il corpo della richiesta.
+ * @param {string} req.body.username1 - Il nome dell'utente che ha inviato la richiesta di amicizia.
+ * @param {string} req.body.username2 - Il nome dell'utente che ha ricevuto la richiesta di amicizia.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.delete("/friendship/reject", async (req, res) => {
     try {
         const {username1, username2} = req.body;
@@ -313,6 +438,13 @@ app.delete("/friendship/reject", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per ottenere le chat di cui un utente è proprietario.
+ *
+ * @param {string} username - Il nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene le chat di cui l'utente è proprietario o un messaggio di errore.
+ */
 app.get("/user/:username/owned-chats", async (req, res) => {
     try {
         const username = req.params.username;
@@ -323,15 +455,20 @@ app.get("/user/:username/owned-chats", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per scaricare un file.
+ *
+ * @param {Object} req.body.room - La stanza da cui scaricare il file.
+ * @param {string} req.body.filename - Il nome del file da scaricare.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i dati del file scaricato o un messaggio di errore.
+ */
 app.post("/download", async (req, res) => {
     try {
         const room = req.body.room;
         const filename = req.body.filename;
         const result = await downloadFile(room, filename);
-        res.setHeader(
-            "Content-disposition",
-            "attachment; filename=" + result.newFilename
-        );
+        res.setHeader("Content-disposition", "attachment; filename=" + result.newFilename);
         res.setHeader("Content-type", "application/octet-stream");
         res.send(result.data);
     } catch (err) {
@@ -342,6 +479,13 @@ app.post("/download", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per ottenere i dettagli di un utente.
+ *
+ * @param {string} username - Il nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i dettagli dell'utente o un messaggio di errore.
+ */
 app.get("/user/:username/details", async (req, res) => {
     try {
         const username = req.params.username;
@@ -352,6 +496,13 @@ app.get("/user/:username/details", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per ottenere i messaggi di file di una chat.
+ *
+ * @param {string} id - L'ID della chat.
+ *
+ * @returns {Object} Un oggetto JSON che contiene i messaggi di file della chat o un messaggio di errore.
+ */
 app.get("/chat/:id/file-messages", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -381,6 +532,13 @@ app.get("/chat/:id/file-messages", async (req, res) => {
     }
 });
 
+/**
+ * Endpoint per eliminare una chat.
+ *
+ * @param {string} id - L'ID della chat da eliminare.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.delete("/chat/:id", async (req, res) => {
     try {
         const chatId = req.params.id;
@@ -435,15 +593,10 @@ app.get("/github/callback", async (req, res) => {
 
     // Scambia il codice di autorizzazione con un token di accesso
     const response = await fetch("https://github.com/login/oauth/access_token", {
-        method: "POST",
-        headers: {
+        method: "POST", headers: {
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            client_id,
-            client_secret,
-            code,
-            redirect_uri
+        }, body: JSON.stringify({
+            client_id, client_secret, code, redirect_uri
         })
     });
 
@@ -464,24 +617,22 @@ app.get("/github/callback", async (req, res) => {
         try {
             let username = await loginUserGithub(userData.login);
             username = username[0].Username;
+            console.log(username);
             addTokenToUser(userData.login, access_token)
                 .then(() => {
                     res.redirect(`http://localhost:3000/index.html?login=${username}`);
                 })
                 .catch(err => {
-                    res.redirect(
-                        `http://localhost:3000/index.html?login=${username}&token=false`
-                    );
+                    res.redirect(`http://localhost:3000/index.html?login=${username}&token=false`);
                 });
         } catch (err) {
+            console.log("Errore");
             console.log(err);
             res.redirect(`http://localhost:3000/accedi.html?login=failed`);
         }
     } else if (state === "register") {
         await registerUserGithub(userData.login, access_token);
-        res.redirect(
-            `http://localhost:3000/register.html?action=register&username=${userData.login}`
-        );
+        res.redirect(`http://localhost:3000/register.html?action=register&username=${userData.login}`);
     } else {
         addGitUsernameToUser(state, userData.login)
             .then(msg => {
@@ -527,7 +678,7 @@ app.post("/github/createRepo/:id", async (req, res) => {
 });
 
 /**
- * 
+ *
  */
 app.get("/github/content", async (req, res) => {
     try {
@@ -555,10 +706,7 @@ app.post("/github/sendInvites/:id", async (req, res) => {
         const githubUsername = await getGithubUsername(username);
         const authUsers = [];
         users.forEach(element => {
-            if (
-                Object.keys(element).includes("usernameGithub") &&
-                element.usernameGithub !== githubUsername
-            ) {
+            if (Object.keys(element).includes("usernameGithub") && element.usernameGithub !== githubUsername) {
                 authUsers.push(element.usernameGithub);
             }
         });
@@ -569,12 +717,7 @@ app.post("/github/sendInvites/:id", async (req, res) => {
         console.log("parte1");
         for (let i = 0; i < authUsers.length; i++) {
             if (!partecicipants.includes(authUsers[i])) {
-                const githubResponse = await sendInvite(
-                    token,
-                    githubUsername,
-                    repo,
-                    authUsers[i]
-                );
+                const githubResponse = await sendInvite(token, githubUsername, repo, authUsers[i]);
                 requests.push(githubResponse.data.id);
             }
         }
@@ -607,29 +750,29 @@ app.post("/github/codespace/:id", async (req, res) => {
         const dbResp = await getRepoByChatId(idChat);
         const repoUrl = dbResp.Url;
         const repoName = dbResp.Nome;
-        console.log("repourl: "+repoUrl);
-        console.log("reponame: "+repoName);
+        console.log("repourl: " + repoUrl);
+        console.log("reponame: " + repoName);
         const token1 = await getUserToken(username);
         const token = token1[0].Token;
         const codespaceUrl = await getCodespaceFromDb(repoUrl, idChat);
         console.log(codespaceUrl);
         console.log("ghresp get");
         const codespaces = await getCodespace(token, usernameGithub, repoName);
-        if(codespaces.data.total_count !== 0){
-            if(Object.keys(codespaceUrl).includes("codespace")){
-                res.json({ url: codespaceUrl.codespace });
-            }else{
+        if (codespaces.data.total_count !== 0) {
+            if (Object.keys(codespaceUrl).includes("codespace")) {
+                res.json({url: codespaceUrl.codespace});
+            } else {
                 res.json({message: "Something went wrong"});
             }
-        }else{
+        } else {
             await removeCodespace(repoUrl, idChat);
             const ghResp = await createCodespace(token, usernameGithub, repoName);
             console.log("ghResp");
             console.log(ghResp.data.web_url);
-            if(ghResp.status == 201){
-              console.log("dbres");
-              console.log(await insertCodespace(ghResp.data.web_url, repoUrl));
-              res.json({ message: "Codespace created succesfully" , url: ghResp.data.web_url });
+            if (ghResp.status == 201) {
+                console.log("dbres");
+                console.log(await insertCodespace(ghResp.data.web_url, repoUrl));
+                res.json({message: "Codespace created succesfully", url: ghResp.data.web_url});
             }
         }
     } catch (error) {
@@ -646,12 +789,12 @@ app.get("/chat/:id/hasRepo", async (req, res) => {
     const idChat = req.params.id;
     let repoUrl, repoName;
     try {
-      const resp = await getRepoByChatId(idChat);
-      repoUrl = resp.Url;
-      repoName = resp.Nome;
-      res.json({ result: true, url: repoUrl});
+        const resp = await getRepoByChatId(idChat);
+        repoUrl = resp.Url;
+        repoName = resp.Nome;
+        res.json({result: true, url: repoUrl});
     } catch (error) {
-      res.json({ result: false })
+        res.json({result: false})
     }
 });
 
@@ -663,13 +806,20 @@ app.get("/user/:username/hasGithub", async (req, res) => {
     const username = req.params.username;
     try {
         const result = await getGithubUsername(username);
-        res.json({ result: true });
+        res.json({result: true});
     } catch (error) {
-        res.json({ result: false });
+        res.json({result: false});
     }
 })
 
-// Servizio per la modifica dell'immagine del profilo
+/**
+ * Endpoint per aggiornare l'immagine del profilo di un utente.
+ *
+ * @param {string} username - Il nome dell'utente.
+ * @param {Object} images - L'immagine del profilo dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.put('/user/:username/profile/image', upload.single('images'), async (req, res) => {
     try {
         const username = req.params.username;
@@ -684,7 +834,14 @@ app.put('/user/:username/profile/image', upload.single('images'), async (req, re
     }
 });
 
-// Servizio per la modifica dello username
+/**
+ * Endpoint per aggiornare lo username di un utente.
+ *
+ * @param {string} username - Il nome attuale dell'utente.
+ * @param {string} newUsername - Il nuovo nome dell'utente.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.put('/user/:username/profile/username', async (req, res) => {
     try {
         const username = req.params.username;
@@ -738,7 +895,14 @@ app.put('/user/:username/profile/username', async (req, res) => {
     }
 });
 
-// Servizio per la modifica della mail
+/**
+ * Endpoint per aggiornare l'email di un utente.
+ *
+ * @param {string} username - Il nome dell'utente.
+ * @param {string} newEmail - La nuova email.
+ *
+ * @returns {Object} Un oggetto JSON che contiene un messaggio di successo o di errore.
+ */
 app.put('/user/:username/profile/email', async (req, res) => {
     try {
         const username = req.params.username;
